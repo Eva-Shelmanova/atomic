@@ -1,0 +1,740 @@
+##обзор проекта atomic
+
+Общая идея
+atomic — AI-агентная система в стиле JARVIS: роутер направляет запросы к специализированным агентам, которые обрабатывают их по цепочке.
+
+##Архитектура
+main.py / API
+    ↓
+AtomicWorkflow (orchestration/workflow.py)
+    ↓
+RouterAgent → определяет intent (retrieval/command/analysis/general)
+    ↓
+Chain of Responsibility: Retriever → Command → Analyst
+    ↓
+Первый подходящий агент обрабатывает запрос
+##Компоненты
+Компонент	Файл	Назначение
+RouterAgent	router/agent.py	Определяет intent через LLM (Ollama), выбирает агента
+RetrieverAgent	agents/retriever.py	RAG: поиск в векторной БД (pgvector) → LLM-ответ
+CommandAgent	agents/command.py	Генерация и выполнение Python-кода (subprocess)
+AnalystAgent	agents/analyst.py	Анализ, объяснения, общие вопросы (fallback)
+ChatMemory	memory/chat.py	История диалога (deque, до 20 сообщений)
+VectorMemory	memory/	pgvector или in-memory для RAG
+CodeExecutor	tools/code_executor.py	Выполнение кода во временном файле через subprocess
+##Поток данных
+ask(query) → сохраняет запрос в ChatMemory.
+Router → classify_request() через LLM → intent.
+Цепочка → Retriever (если retrieval), Command (если command), Analyst (остальное).
+Ответ → сохраняется в ChatMemory, возвращается пользователю.
+##Технологии
+LLM: Ollama (deepseek-r1, qwen2.5-7B, nomic-embed-text)
+Векторная БД: PostgreSQL + pgvector
+API: FastAPI, uvicorn
+Трейсинг: Langfuse (если заданы ключи)
+Зависимости: uv, pydantic, ollama, psycopg2, pgvector
+##Структура каталогов
+atomic/
+├── main.py                 # CLI / API точка входа
+├── atomic/
+│   ├── api/server.py       # FastAPI: POST /chat, GET /health
+│   ├── router/agent.py     # Роутер
+│   ├── agents/             # retriever, command, analyst
+│   ├── memory/             # chat, pgvector, vector (in-memory)
+│   ├── tools/code_executor.py
+│   ├── llm/client.py       # Ollama chat
+│   ├── embeddings/client.py
+│   ├── observability/langfuse.py
+│   └── orchestration/workflow.py
+├── scripts/load_dataset.py # Загрузка dataset/*.txt в RAG
+├── docker-compose.yml      # PostgreSQL + pgvector
+└── config.py               # Модели, DSN, Langfuse
+##Особенности
+Chain of Responsibility — агенты проверяют can_handle() и обрабатывают только подходящие запросы.
+Analyst — всегда can_handle=True, используется как fallback.
+CodeExecutor — subprocess без Docker; для production нужен sandbox.
+Демо-документы — в main.py и api/server.py добавляются 3 строки в RAG для быстрого теста.
+Если нужно, могу разобрать конкретный модуль или сценарий работы.
+
+##langfuse
+
+Как используется Langfuse в проекте
+Где код интеграции: модуль observability/langfuse.py.
+Он даёт:
+
+trace_ask(query) — контекст‑менеджер для трассировки всего цикла workflow.ask(...).
+observe_llm(...) — логирует LLM‑вызовы (чат‑completion).
+observe_embedding(...) — логирует вызовы эмбеддингов.
+Как это включается в пайплайн
+
+В BolltWorkflow.ask():
+
+from atomic.observability.langfuse import trace_ask
+...
+with trace_ask(query) as span:
+    response = self._route_and_process(query)
+    answer = response.content
+    if span is not None:
+        span.update(output=answer)
+В LLMClient.chat():
+
+from atomic.observability.langfuse import observe_llm
+...
+_trace_llm(self.model, messages, content)
+В EmbeddingClient.embed_batch():
+
+from atomic.observability.langfuse import observe_embedding
+...
+_trace_embedding(self.model, texts)
+Когда трейсинг реально включается
+
+Если заданы переменные окружения:
+LANGFUSE_SECRET_KEY
+LANGFUSE_PUBLIC_KEY
+(опционально) LANGFUSE_BASE_URL (https://cloud.langfuse.com по умолчанию)
+Если ключей нет или есть ошибка подключения, функции тихо ничего не делают.
+Как запустить с Langfuse
+
+В .env или окружении:
+
+export LANGFUSE_SECRET_KEY="секретный_ключ"
+export LANGFUSE_PUBLIC_KEY="публичный_ключ"
+export LANGFUSE_BASE_URL="https://cloud.langfuse.com"  # или свой self-hosted
+Потом просто запускаешь CLI или API как обычно — трассы появятся в Langfuse.
+
+
+
+
+
+## Docker Compose
+Назначение docker-compose.yml в проекте
+Поднять PostgreSQL с pgvector “в один клик”
+docker-compose.yml поднимает контейнер atomic-postgres на основе образа pgvector/pgvector:pg16, где уже есть расширение pgvector для векторного поиска.
+
+Стандартный DSN для векторной памяти
+В контейнере создаётся БД с логином/паролем/именем:
+
+POSTGRES_USER=atomic
+POSTGRES_PASSWORD=atomic
+POSTGRES_DB=atomic
+Это совпадает с дефолтным DSN в config.py (postgresql://atomic:atomic@localhost:5432/atomic) и переменной BOLLT_PG_VECTOR_DSN, которую читает PgVectorStore.
+Персистентность данных RAG
+Volume atomic_pgdata монтируется в /var/lib/postgresql/data, чтобы документы, загруженные через scripts/load_dataset.py (таблица atomic_documents), не терялись между перезапусками контейнера.
+
+Healthcheck для стабильного старта
+Healthcheck (pg_isready -U atomic -d atomic) даёт понять, что БД готова принимать подключения, прежде чем к ней полезет код (PgVectorStore / PgVectorMemory).
+
+Зачем всё это
+
+Если ты хочешь production‑like RAG с PostgreSQL+pgvector, просто делаешь:
+docker compose up -d
+export BOLLT_PG_VECTOR_DSN="postgresql://atomic:atomic@localhost:5432/atomic"
+и векторная память начинает работать поверх Postgres.
+Если Postgres не нужен (быстрый локальный старт), docker-compose.yml можно игнорировать и выставить BOLLT_USE_PGVECTOR=false, тогда будет использоваться in‑memory VectorMemory.
+
+
+## uv 
+Что такое uv в этом проекте и зачем он нужен
+Менеджер зависимостей и раннер
+uv здесь играет роль современного аналога pip + venv + pip-tools.
+Он:
+
+читает pyproject.toml ([project] и [tool.uv]),
+ставит зависимости (runtime + dev),
+управляет lock‑файлом (uv.lock),
+запускает команды внутри своего окружения (uv run ...).
+Как он используется в README / проекте
+
+Установка зависимостей:
+
+uv sync
+Читает зависимости из pyproject.toml и ставит их в изолированное окружение, заодно создаёт/обновляет uv.lock.
+
+Экспорт для pip (если нужно):
+
+uv export --no-dev -o requirements.txt
+Генерирует requirements.txt из lock‑файла, чтобы можно было использовать обычный pip.
+
+Запуск приложений через uv run:
+
+CLI:
+uv run python main.py
+API:
+uv run python main.py --api
+# или
+uv run uvicorn atomic.api.server:app --reload --port 8000
+Скрипты и тесты:
+uv run python scripts/load_dataset.py
+uv run pytest tests/test_bollt.py -v
+uv run deepeval set-ollama --model=deepseek-r1:latest
+Зачем это удобно именно здесь
+
+Единый источник правды по зависимостям — всё в pyproject.toml (runtime) и [tool.uv].dev-dependencies (dev).
+Повторяемость окружения — uv.lock фиксирует версии, чтобы проект одинаково работал у разных людей.
+Нет ручной возни с виртуальными окружениями — uv сам создаёт и использует env, когда ты пишешь uv run ... или uv sync.
+
+### Преимущества uv
+
+uv — очень удачный выбор для Python-проектов.
+
+Плюсы
+Скорость — заметно быстрее pip и poetry, особенно при sync и lock.
+Один инструмент — заменяет pip, virtualenv, pip-tools и частично pyenv.
+Совместимость — pyproject.toml и uv.lock работают с pip, poetry и другими инструментами.
+uv run — запуск в venv без явной активации: uv run python main.py или uv run pytest.
+Команды как у pip — uv add, uv remove интуитивно понятны.
+Astral — та же команда, что и Ruff, с хорошей поддержкой и развитием.
+На что обратить внимание
+Новизна — меньше лет в продакшене, чем у pip, но уже активно используется.
+Экосистема — CI/CD и Docker всё чаще поддерживают uv, но не везде.
+Привычка — переход с pip/poetry требует небольшой перестройки workflow.
+Вывод
+Для новых проектов uv — очень разумный выбор: быстрый, удобный и совместимый с современным Python-пакетным миром. Для bollt он подходит хорошо.
+
+
+При uv run uv сам всё подготовит.
+
+uv run python main.py:
+
+Создаст .venv, если его нет
+Установит зависимости из pyproject.toml / uv.lock, если их нет
+Запустит скрипт в этом окружении
+То есть можно сразу писать:
+
+uv run python main.py
+без предварительного uv sync.
+
+Когда нужен uv sync:
+
+Явно установить зависимости (например, перед uv run pytest)
+Обновить окружение после uv add / uv lock
+В CI/CD, чтобы отдельно установить зависимости и потом запускать команды
+Кратко: uv run достаточно для обычного запуска, uv sync — для явной установки и обновления зависимостей.
+
+
+зависимости будут установлены в окружение?
+
+Да. uv ставит зависимости в виртуальное окружение проекта — обычно в .venv в корне проекта.
+
+bolt/
+├── .venv/          ← сюда попадают пакеты
+│   ├── bin/
+│   └── lib/
+├── bollt/
+├── main.py
+├── pyproject.toml
+└── uv.lock
+Системный Python и другие проекты не затрагиваются.
+
+
+
+## PostgreSQL
+
+Смысл PostgreSQL в этом проекте
+Хранилище векторной памяти для RAG
+PostgreSQL с расширением pgvector используется как персистентная векторная БД.
+В неё кладутся эмбеддинги документов и запросов, чтобы RetrieverAgent мог делать семантический поиск (RAG).
+
+Где это в коде
+
+PgVectorStore (atomic.memory.pgvector_store) — слой работы с Postgres:
+создаёт таблицу atomic_documents с колонкой embedding vector(...),
+добавляет документы и эмбеддинги,
+ищет по косинусному сходству.
+PgVectorMemory (atomic.memory.pgvector_memory) — обёртка “эмбеддинги + PgVectorStore” с интерфейсом .add() / .search().
+create_vector_memory() (atomic.memory.factory) — выбирает:
+если BOLLT_USE_PGVECTOR=true → PgVectorMemory (Postgres),
+иначе → VectorMemory (in‑memory демо).
+Зачем нужен Docker Compose
+docker-compose.yml поднимает контейнер atomic-postgres с:
+
+пользователем / паролем / БД atomic,
+volume atomic_pgdata для сохранения данных,
+healthcheck, чтобы гарантировать готовность БД.
+Это даёт готовый Postgres+pgvector под DSN
+postgresql://atomic:atomic@localhost:5432/atomic, который используется в PG_VECTOR_DSN.
+Что это даёт концептуально
+
+Persistency: загруженный через scripts/load_dataset.py датасет не пропадает между перезапусками.
+Реалистичный RAG: поиск идёт по эмбеддингам в Postgres, а не по простому in‑memory списку.
+Гибкость: можно быстро переключиться на лёгкий режим (без БД) просто установив BOLLT_USE_PGVECTOR=false.
+
+docker compose exec postgres psql -U atomic -d atomic
+
+
+### Структура векторнй базы данных
+atomic=# \d atomic_documents
+                                Table "public.atomic_documents"
+  Column   |    Type     | Collation | Nullable |                   Default                    
+-----------+-------------+-----------+----------+----------------------------------------------
+ id        | integer     |           | not null | nextval('atomic_documents_id_seq'::regclass)
+ content   | text        |           | not null | 
+ metadata  | jsonb       |           |          | '{}'::jsonb
+ embedding | vector(768) |           |          | 
+Indexes:
+    "atomic_documents_pkey" PRIMARY KEY, btree (id)
+    "idx_atomic_documents_embedding" hnsw (embedding vector_cosine_ops)
+
+id | integer | not null | default nextval(...)
+Уникальный числовой идентификатор записи (первичный ключ), автоинкремент.
+
+content | text | not null
+Исходный текстовый документ/фрагмент, по которому потом строится ответ в RAG.
+
+metadata | jsonb | default '{}'::jsonb
+Дополнительная информация о документе в формате JSON (например, source, путь к файлу, тип документа).
+
+embedding | vector(768)
+Вектор‑представление текста длиной 768 измерений, сгенерированное моделью эмбеддингов (nomic-embed-text).
+
+atomic_documents_pkey (PRIMARY KEY, btree (id))
+Индекс по id, обеспечивающий уникальность и быстрый доступ по первичному ключу.
+
+idx_atomic_documents_embedding (hnsw (embedding vector_cosine_ops))
+HNSW‑индекс по колонке embedding с косинусной метрикой; ускоряет семантический поиск похожих документов.
+
+evashelmanova@Evas-Laptop atomic % uv run python model_size.py
+warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+768
+
+
+
+## Режими запуска
+
+Полный режим: с Postgres + pgvector и RAG
+Поднять Postgres из docker-compose.yml:
+cd /Users/evashelmanova/Documents/atomic
+docker compose up -d
+export BOLLT_PG_VECTOR_DSN="postgresql://atomic:atomic@localhost:5432/atomic"
+Убедиться, что модели в Ollama есть (минимум):
+deepseek-r1:latest
+vikhr-llama3.1-8b-instruct-r-21-09-24.Q4_K_M (через твой Modelfile)
+nomic-embed-text:latest
+Установить зависимости:
+uv sync
+Загрузить датасет в RAG:
+uv run python scripts/load_dataset.py
+Запуск:
+CLI:
+
+uv run python main.py
+API:
+
+uv run python main.py --api
+# или
+uv run uvicorn atomic.api.server:app --reload --port 8000
+Пример запроса к API:
+
+curl -X POST "http://localhost:8000/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "найди информацию об atomic"}'
+
+  
+
+## тесты
+
+10 тестовых вопросов для RAG по загруженным инструкциям:
+
+Как запустить автоматизированную систему?
+Что нужно проверить перед запуском сервисов?
+Как корректно завершить работу системы?
+Как перезапустить сервисы АС?
+Как проверить, что сервисы запустились корректно?
+Где фиксировать результат запуска?
+Что нужно проверить перед запуском (электропитание, сеть)?
+Как убедиться в доступности пользовательского интерфейса?
+Какой порядок действий при запуске сервера баз данных?
+Что делать при перезапуске сервисов автоматизированной системы?
+
+##Usage
+Использование
+API (body):
+
+POST /chat
+{"message": "привет", "session_id": "user-123"}
+API (заголовок):
+
+curl -X POST http://localhost:8000/chat \
+  -H "X-Session-ID: user-123" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "привет"}'
+CLI — session_id задаётся автоматически.
+
+сделай инструкцию по использованию
+
+USAGE.md(new)
++260
+# Инструкция по использованию atomicПошаговое руководство по установке, настройке и запуску AI-агентной системы atomic.---
+README.md
++2
+## Структура проекта
+📖 **[Инструкция по использованию (USAGE.md)](USAGE.md)** — установка, настройка, API, Langfuse.## Структура проекта
+Создан файл USAGE.md с инструкцией по использованию.
+
+Содержание
+Требования — Python, Ollama, Docker
+Установка — uv, зависимости, модели Ollama
+База данных — Docker PostgreSQL или in-memory
+Конфигурация — .env
+Langfuse — self-hosted и Cloud
+Запуск — CLI и API
+API — POST /chat, GET /health, примеры curl
+Переменные окружения — таблица
+Типы запросов — соответствие агентам
+Тесты — команды pytest
+Устранение неполадок — типичные проблемы
+В README добавлена ссылка на USAGE.md.
+
+##Список промптов в проекте:
+
+1. RouterAgent — atomic/router/agent.py
+ROUTER_PROMPT — определение intent:
+
+Определи намерение пользователя по запросу. Ответь ОДНИМ словом: retrieval, command, analysis или general.
+retrieval — поиск в базе знаний, инструкций, документации. Примеры: "как запустить", "найди информацию", "что известно о", "инструкция по"
+command — выполнение КОДА на Python/bash. Только если явно просят выполнить код: "выполни код", "запусти код", "run: print(1+1)"
+analysis — анализ, планирование, объяснения: "проанализируй", "объясни", "спланируй"
+general — общий вопрос, разговор
+Важно: "Как запустить систему?" = retrieval (инструкции). "Выполни код print(1)" = command.
+Запрос: {query}
+Ответ (одно слово):
+2. RetrieverAgent — atomic/agents/retriever.py
+RETRIEVER_PROMPT — ответ по найденным документам:
+
+На основе найденных документов ответь на вопрос пользователя.
+Если в документах нет релевантной информации — честно скажи об этом.
+Документы:
+{context}
+Вопрос: {query}
+Ответ:
+3. CommandAgent — atomic/agents/command.py
+CODE_GEN_PROMPT — генерация Python-кода:
+
+Пользователь просит выполнить код или действие. Сгенерируй ТОЛЬКО код на Python, без пояснений и markdown.
+Код должен быть самодостаточным, с print() для вывода результата.
+Если запрос неясен — сгенерируй print("Уточните, какой код выполнить").
+Запрос: {query}
+Код (только Python):
+4. AnalystAgent — atomic/agents/analyst.py
+ANALYST_PROMPT — анализ и ответ:
+
+Ты — аналитик и эксперт. Ответь на вопрос пользователя: рассуждай, анализируй, давай рекомендации.
+Будь конкретным и полезным. Отвечай на том же языке, что и вопрос.
+Вопрос: {query}
+Ответ:
+Примечание: AnalystAgent добавляет к промпту блок Предыдущий контекст:\n{history_text}\n\n, если есть история чата (последние 4 сообщения).
+
+Сводка
+Файл	Переменная	Плейсхолдеры
+router/agent.py	ROUTER_PROMPT	{query}
+agents/retriever.py	RETRIEVER_PROMPT	{context}, {query}
+agents/command.py	CODE_GEN_PROMPT	{query}
+agents/analyst.py	ANALYST_PROMPT	{query}
+
+##Векторный поиск в RAG: архитектурная основа семантических систем
+
+Векторный поиск — это ключевой механизм, который превращает Retrieval-Augmented Generation (RAG) из теоретической конструкции в промышленно применимую архитектуру. Его задача — обеспечить семантическое извлечение релевантного контекста, на который затем опирается генеративная модель. В отличие от классического поиска по ключевым словам, векторный подход работает с плотными представлениями смысла, что критично для сложных корпоративных сценариев.
+
+1. Роль векторного поиска в RAG-цепочке
+
+Архитектурно RAG состоит из трёх слоёв:
+	1.	Embedding layer — преобразование данных и запросов в векторы
+	2.	Retrieval layer — поиск ближайших векторов
+	3.	Generation layer — LLM, использующая найденный контекст
+
+Векторный поиск находится в центре этой схемы. Он определяет:
+	•	точность контекста
+	•	устойчивость системы к шуму
+	•	масштабируемость
+
+Ошибки на этом уровне не компенсируются даже сильной моделью генерации.
+
+⸻
+
+2. Семантическое пространство как инфраструктура
+
+Векторный поиск опирается на embedding-пространство высокой размерности (обычно 384–3072). Это пространство:
+	•	нелинейно отражает смысл
+	•	чувствительно к доменной специфике
+	•	зависит от модели эмбеддингов
+
+Ключевая инженерная проблема — alignment:
+	•	между пользовательским запросом и индексом
+	•	между различными источниками данных
+	•	между языками и форматами
+
+На практике это означает:
+	•	выбор или дообучение embedding-модели
+	•	нормализацию данных (chunking, cleaning)
+	•	контроль дрейфа семантики со временем
+
+⸻
+
+3. Индексация: компромисс между скоростью и точностью
+
+Полный перебор (brute-force) неприемлем при масштабах enterprise. Используются approximate nearest neighbor (ANN) алгоритмы:
+	•	HNSW (де-факто стандарт)
+	•	IVF + PQ
+	•	ScaNN / DiskANN
+
+Архитектурный выбор определяется:
+	•	SLA по latency
+	•	объемом данных
+	•	частотой обновлений
+
+Практика показывает:
+	•	HNSW — оптимален для read-heavy сценариев
+	•	IVF — лучше при экстремальных объемах
+	•	гибридные индексы — для балансировки
+
+⸻
+
+4. Chunking как критический фактор качества
+
+Векторный поиск работает не с документами, а с чанками. Неправильная сегментация разрушает смысловую целостность.
+
+Типовые ошибки:
+	•	слишком мелкие чанки → потеря контекста
+	•	слишком крупные → снижение точности поиска
+
+Продвинутые подходы:
+	•	semantic chunking (по смыслу, а не по символам)
+	•	hierarchical chunking
+	•	overlap-стратегии
+
+На уровне архитектуры это влияет на:
+	•	recall
+	•	стоимость хранения
+	•	нагрузку на retrieval
+
+⸻
+
+5. Гибридный поиск как индустриальный стандарт
+
+Чистый векторный поиск редко достаточен в enterprise. Используется гибрид:
+	•	BM25 / keyword search
+	•	vector similarity
+	•	metadata filtering
+
+Это решает:
+	•	проблемы точности на коротких запросах
+	•	необходимость строгих фильтров (документы, права доступа)
+	•	объяснимость результатов
+
+Фактически, production RAG = multi-stage retrieval pipeline.
+
+⸻
+
+6. Управление качеством и наблюдаемость
+
+Векторный поиск сложно дебажить, так как он непрозрачен. Необходимы:
+	•	offline evaluation (recall@k, MRR)
+	•	synthetic queries
+	•	human-in-the-loop валидация
+
+Критично внедрять:
+	•	tracing retrieval → generation
+	•	логирование embedding drift
+	•	A/B тестирование индексов
+
+Без этого система деградирует незаметно.
+
+⸻
+
+7. Безопасность и контроль доступа
+
+В корпоративной среде векторный поиск должен учитывать:
+	•	RBAC/ABAC
+	•	data isolation
+	•	leakage prevention
+
+Реализация:
+	•	фильтрация на этапе retrieval
+	•	сегментация индексов
+	•	encryption / secure enclaves
+
+Игнорирование этого уровня делает RAG непригодным для enterprise.
+
+⸻
+
+8. Горизонт 5–10 лет: эволюция подхода
+
+Ожидаемые направления развития:
+	•	contextual embeddings (динамические, а не статические)
+	•	multi-vector representations (один объект — несколько смыслов)
+	•	knowledge-aware retrieval (KAG) — интеграция графов знаний
+	•	agentic retrieval — адаптивные стратегии поиска
+
+Векторный поиск перестанет быть изолированным компонентом и станет частью более сложных reasoning pipeline.
+
+⸻
+
+Вывод
+
+Векторный поиск — это не просто технический элемент RAG, а системообразующий слой, от которого зависит вся архитектура. Его нельзя рассматривать как «базу данных для embeddings» — это полноценная инженерная подсистема с требованиями к качеству, безопасности и масштабируемости.
+
+Сильные RAG-системы строятся не вокруг LLM, а вокруг retrieval. Именно здесь формируется реальная ценность: точный, релевантный и контролируемый контекст, на котором уже можно безопасно строить генерацию.
+
+##Chunking (разбиение на чанки) в проекте
+Чанков в проекте нет.
+
+load_dataset.py сохраняет каждый .txt целиком как один документ
+Разбиения на части (по абзацам, предложениям, символам) нет
+В report.txt chunking упоминается как возможное улучшение (semantic chunking, hierarchical chunking)
+
+языковой обработке в современных AI-пайплайнах (NLP / LLM-пайплайны / RAG). Если у тебя другой контекст LNP — уточни, и разверну точно под него.
+
+⸻
+
+1. Базовые методы нормализации (ingestion layer)
+
+Цель — привести сырой текст к стабильному представлению.
+
+Классика:
+	•	токенизация (word / subword / BPE / unigram)
+	•	lowercasing / unicode normalization
+	•	удаление шума (HTML, OCR-артефакты)
+	•	лемматизация / стемминг
+
+Практика enterprise:
+	•	очистка PDF/Docx с сохранением структуры
+	•	дедупликация (hash / semantic)
+	•	language detection
+	•	PII masking
+
+Это критично для downstream-качества embeddings и retrieval.
+
+⸻
+
+2. Сегментация и структурирование
+
+Фактически самый недооцененный слой.
+
+Методы:
+	•	fixed-size chunking (по символам/токенам)
+	•	sentence-based splitting
+	•	semantic chunking (по смысловым границам)
+	•	hierarchical chunking (document → section → paragraph)
+
+Продвинутые техники:
+	•	layout-aware parsing (таблицы, списки, заголовки)
+	•	AST-подобные структуры для документов
+	•	chunk enrichment (заголовки, метаданные)
+
+Это напрямую влияет на recall/precision в retrieval.
+
+⸻
+
+3. Векторизация (representation layer)
+
+Переход от текста к числовому пространству.
+
+Подходы:
+	•	bag-of-words / TF-IDF (устаревшие, но полезны в гибриде)
+	•	static embeddings (word2vec, GloVe)
+	•	contextual embeddings (Transformer-based)
+
+Современный стандарт:
+	•	sentence-transformers
+	•	instruction-tuned embeddings
+	•	domain-specific embeddings
+
+Ключевая проблема:
+	•	semantic drift
+	•	domain mismatch
+
+⸻
+
+4. Семантическое обогащение
+
+Добавление “смысла” поверх текста.
+
+Методы:
+	•	named entity recognition (NER)
+	•	relation extraction
+	•	topic modeling
+	•	keyword extraction
+	•	summarization (abstractive/extractive)
+
+В enterprise:
+	•	онтологии / taxonomies
+	•	knowledge graph linking
+	•	document classification
+
+Это позволяет строить KAG вместо простого RAG.
+
+⸻
+
+5. Retrieval-oriented preprocessing
+
+Оптимизация текста именно под поиск.
+
+Методы:
+	•	query expansion
+	•	synonym injection
+	•	multi-vector representations (один документ → несколько embeddings)
+	•	metadata tagging
+
+Гибрид:
+	•	BM25 + embeddings
+	•	sparse + dense retrieval
+
+⸻
+
+6. Пост-обработка и подготовка контекста
+
+После retrieval текст тоже обрабатывается.
+
+Методы:
+	•	re-ranking (cross-encoder)
+	•	deduplication результатов
+	•	context compression
+	•	answer-focused extraction
+
+LLM-aware:
+	•	prompt assembly
+	•	context window optimization
+	•	hallucination guards
+
+⸻
+
+7. Генеративная обработка (LLM layer)
+
+Финальный слой.
+
+Методы:
+	•	instruction following
+	•	chain-of-thought (ограниченно в production)
+	•	tool augmentation
+	•	structured output generation
+
+⸻
+
+8. Наблюдаемость и контроль качества
+
+Часто игнорируется, но критично.
+
+Методы:
+	•	evaluation datasets
+	•	synthetic queries
+	•	embedding space monitoring
+	•	drift detection
+
+Архитектурный вывод
+
+Если рассматривать “LNP” как современный пайплайн обработки языка, то это не один метод, а многоуровневая система:
+Raw Data
+ → Normalization
+ → Structuring
+ → Embedding
+ → Enrichment
+ → Retrieval Optimization
+ → Generation
+ → Evaluation
+
+ Что важно на уровне архитектора
+	1.	Основная ценность не в модели, а в preprocessing + retrieval
+	2.	Chunking и embedding strategy дают до 70% качества
+	3.	Без semantic enrichment система не масштабируется
+	4.	Нужен контроль дрейфа и версионность embeddings
+	5.	Гибридный подход (dense + sparse + metadata) — стандарт

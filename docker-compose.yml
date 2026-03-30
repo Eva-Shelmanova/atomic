@@ -1,0 +1,27 @@
+services:
+  postgres:
+    # Образ PostgreSQL с расширением pgvector (для векторного поиска)
+    image: pgvector/pgvector:pg16
+    # Имя контейнера для удобства
+    container_name: atomic-postgres
+    environment:
+      # Пользователь/пароль/БД для использования в ATOMIC_PG_VECTOR_DSN
+      POSTGRES_USER: atomic
+      POSTGRES_PASSWORD: atomic
+      POSTGRES_DB: atomic
+    ports:
+      # Пробрасываем стандартный порт PostgreSQL
+      - "5432:5432"
+    volumes:
+      # Персистентное хранилище данных Postgres
+      - atomic_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Проверка готовности БД к подключениям
+      test: ["CMD-SHELL", "pg_isready -U atomic -d atomic"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  # Docker volume для сохранения данных PostgreSQL
+  atomic_pgdata:

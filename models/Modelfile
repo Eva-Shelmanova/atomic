@@ -1,0 +1,1 @@
+FROM ./vikhr-llama3.1-8b-instruct-r-21-09-24.Q4_K_M.gguf
