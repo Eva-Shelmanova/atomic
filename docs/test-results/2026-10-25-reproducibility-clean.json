@@ -1,0 +1,70 @@
+{
+ "a": "2026-10-25-benchmark-final.json",
+ "b": "benchmark-clean.json",
+ "ignored": [
+  "created_at",
+  "latency",
+  "reproducibility",
+  "runtime_s"
+ ],
+ "identical": true,
+ "differences": [],
+ "versions_a": {
+  "generator": "gen-1.0.0-hgb-1a0fecad01",
+  "verifier": "hv-1.2.0-pairwise|sig-1.0.0-affd161cd6|onset:sig-1.0.0-affd161cd6|analogues-1.1.0+ethz-cc2ace0e610e1fce",
+  "novelty": "nov-1.0.0-2a0799af3b",
+  "rulepack": "aes-core-1.1.0",
+  "data_source_commit": "a8d54ed0ed2c037bd39938d51f46c8f0df94b002",
+  "data_config_fingerprint": "d8676aaf07a1ac3b",
+  "config_version": "1.1.0",
+  "config_fingerprint_full": "fcb169e27db37a15",
+  "ollama_models": {
+   "deepseek-r1:latest": "6995872bfe4c521a67b32da386cd21d5c6e819b6e0d62f79f64ec83be99f5763",
+   "nomic-embed-text:latest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+   "qcwind/qwen2.5-7B-instruct-Q4_K_M:latest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e"
+  },
+  "uv_lock_sha256": "fe60eb17db26005a",
+  "python": "3.12.12",
+  "numpy": "2.4.3",
+  "scikit_learn": "1.9.1",
+  "seed": 42
+ },
+ "latency_a": {
+  "generator": {
+   "p50_ms": 17.755,
+   "p95_ms": 33.2762
+  },
+  "hypothesis_verifier": {
+   "p50_ms": 4.7705,
+   "p95_ms": 5.7483
+  },
+  "novelty": {
+   "p50_ms": 3.026,
+   "p95_ms": 3.8005
+  },
+  "total_with_analogues": {
+   "p50_ms": 25.758,
+   "p95_ms": 42.7947
+  },
+  "windows": 300
+ },
+ "latency_b": {
+  "generator": {
+   "p50_ms": 96.3735,
+   "p95_ms": 193.6091
+  },
+  "hypothesis_verifier": {
+   "p50_ms": 12.697,
+   "p95_ms": 16.9058
+  },
+  "novelty": {
+   "p50_ms": 7.889,
+   "p95_ms": 11.6233
+  },
+  "total_with_analogues": {
+   "p50_ms": 117.0921,
+   "p95_ms": 222.3538
+  },
+  "windows": 300
+ }
+}

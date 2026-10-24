@@ -1,0 +1,379 @@
+{
+ "created_at": "2026-10-24T21:12:22+00:00",
+ "summary": {
+  "cases": 13,
+  "decisions": {
+   "allow": 4,
+   "require_human": 9
+  },
+  "sentences": 46,
+  "cited": 34,
+  "cited_share": 0.739,
+  "unknown_citations": 0,
+  "narratives_rejected": 0,
+  "model": "qcwind/qwen2.5-7B-instruct-Q4_K_M:latest",
+  "model_digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+  "judge": {
+   "model": "vikhr-llama3.1-8b-instruct-r-21-09-24-Q4_K_M:latest",
+   "model_digest": "55b877ef5cb79bbd21c8cd215c5a763e571cfa432540c6b5c94df3fcc3b95c7e",
+   "judged": 13,
+   "faithfulness_mean": 0.706,
+   "relevancy_mean": 0.764,
+   "control": {
+    "faithful": {
+     "faithfulness": {
+      "score": 0.667,
+      "reason": "The score is 0.67 because, despite the overall faithfulness to the retrieval context, there is a notable contradiction indicating that the actual output incorrectly states that the pressure in the reactor building exceeds the permissible range for SGBTR, which contradicts the typical scenario of increased pressure due to a PG pipe rupture."
+     },
+     "relevancy": {
+      "score": 0.5,
+      "reason": "The score is 0.50 because there are no irrelevant statements provided in the list of reasons, which suggests that all output is relevant to the input question about explaining the automatic check operator for hypotheses on the state of a nuclear power plant."
+     }
+    },
+    "distorted": {
+     "faithfulness": {
+      "score": 0.333,
+      "reason": "The score is 0.33 because the actual output contains contradictions: first, it states that the pressure in the protective shell dropped to zero, which contradicts the context stating that the partial RB air pressure is within a typical range for LOCA; second, it claims that the situation corresponds to the rupture of PG B pipe, contradicting the context where it's mentioned that the reactor buildi"
+     },
+     "relevancy": {
+      "score": 1.0,
+      "reason": "The score is 1.00 because all relevant information was provided to address the request for an explanation of the automatic check operator's display regarding hypotheses on the state of a nuclear power plant."
+     }
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "scenario": "FLB",
+   "outcome": "identified",
+   "decision": "allow",
+   "judge": {
+    "faithfulness": {
+     "score": 0.75,
+     "reason": "The score is 0.75 because some parameters align with expectations for LOCAC or LOCA, but other indicators contradict these hypotheses, and temperature RCST and levels of other parameters do not meet the expected standards."
+    },
+    "relevancy": {
+     "score": 0.6,
+     "reason": "The score is 0.60 because the actual output contains irrelevant statements that do not directly explain how the automatic check for hypotheses about the state of the nuclear power plant works. The statements mention FLB (Fuel Channel Blockage) and its monitoring, which are related to the overall analysis of the plant's condition but do not specifically address the mechanism or purpose of the autom"
+    }
+   },
+   "violated": [],
+   "narrative": {
+    "sentences": 4,
+    "cited": 4,
+    "unknown_citations": 0
+   },
+   "seconds": 40.6,
+   "narrative_rejected": null,
+   "narrative_text": "Проверка показывает высокую вероятность ситуации FLB (разрыв питательной линии), подтвержденную независимой проверкой и 100% долями подтверждений [E1][E2][E3][E4][E5]. Признаки, указывающие на FLB, включают тренды и уровни радиационного мониторинга RB air (CPM) и изменения уровня RCS, которые находятся в типичных диапазонах для этой гипотезы [E1][E2][E3][E4][E5]. В то же время, признаки, такие как температура РЦС и уровни других параметров, не соответствуют ожиданиям для LOCAC или LOCA, что опровергает эти гипотезы [E6][E7][E8][E9][E10][E11][E12][E13][E14][E15][E16][E17][E18][E19][E20]. Аналогичные события из базы ETHZ также подтверждают вероятность FLB [A1][A2][A3]."
+  },
+  {
+   "scenario": "LLB",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because the actual output contains contradictions indicating a lack of certainty, with only 47% confirmations for hypothesis SGBTR and 0% confirmations for the LOCA scenario, which suggests that there is no conclusive evidence to fully support either hypothesis."
+    },
+    "relevancy": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because the actual output contains irrelevant statements regarding typical ranges for LLB and the lack of confirmation or refutation by deviations, which do not address the automatic checking of hypotheses about the AES status as requested in the input."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 3,
+    "cited": 2,
+    "unknown_citations": 0
+   },
+   "seconds": 61.6,
+   "narrative_rejected": null,
+   "narrative_text": "Проверка подтверждает гипотезу LLB (разрыв линии продувки во вспомогательном здании) с 100% уверенностью, основываясь на соответствующих отклонениях показаний [E1], [E2], [E3], [E4], [E5]. Эти отклонения находятся в типичных диапазонах для LLB и не подтверждают гипотезы SGBTR (разрыв трубки ПГ B) или LOCA (течь теплоносителя, горячая нитка), что опровергает их с 0% уверенностью [E6]—[E20]. Аналогичные события из базы ETHZ указывают на возможные причины LLB, подтверждающие текущую ситуацию."
+  },
+  {
+   "scenario": "LOCA",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because the actual output contradicts the retrieval context: it incorrectly states that the generator's confidence in the LOCA hypothesis is 96%, when in fact it should be 51%. Additionally, the actual output misrepresents the generator's confidence in the SGATR hypothesis as 'less likely compared to LOCA', whereas the correct statement from the context is that the confidence is "
+    },
+    "relevancy": {
+     "score": 0.667,
+     "reason": "The score is 0.67 because the actual output contains irrelevant statements that are more related to comparing probabilities of different hypotheses rather than addressing the operator's request for an explanation of automatic hypothesis testing regarding the state of a nuclear power plant."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 3,
+    "cited": 2,
+    "unknown_citations": 0
+   },
+   "seconds": 71.4,
+   "narrative_rejected": null,
+   "narrative_text": "Оценка ситуации указывает на вероятность LOCA (течей теплоносителя по горячей нитке) с высокой уверенностью — 96% подтверждающих свидетельств [E1][E2][E3][E4][E5][E6]. Это подтверждается наблюдениями в типичных диапазонах для LOCA, таких как уровень воздуха в реакторной оболочке и радиационный мониторинг. Хотя гипотезы LOCAC (течей теплоносителя по холодной нитке) и SGATR (разрыва трубки ПГ A) также имеют подтверждающие свидетельства, они менее вероятны по сравнению с LOCA [E7][E8][E9][E10][E11][E12][E13][E14][E15][E16][E17][E18][E19][E20][E21][E22]."
+  },
+  {
+   "scenario": "LOCAC",
+   "outcome": "identified",
+   "decision": "allow",
+   "judge": {
+    "faithfulness": {
+     "score": 1.0,
+     "reason": "The score is 1.00 because there are no discrepancies between the 'actual output' and the 'retrieval context', as indicated by an empty list of contradictions."
+    },
+    "relevancy": {
+     "score": 1.0,
+     "reason": "The score is 1.00 because all relevant information was provided to address the request for an explanation of the automatic check operator's display regarding hypotheses on the state of a nuclear power plant."
+    }
+   },
+   "violated": [],
+   "narrative": {
+    "sentences": 2,
+    "cited": 2,
+    "unknown_citations": 0
+   },
+   "seconds": 61.2,
+   "narrative_rejected": null,
+   "narrative_text": "Анализ показывает высокую вероятность ситуации LOCAC (течь теплоносителя, холодная нитка), подтвержденную независимой проверкой и 100% согласием всех наблюдаемых свидетельств [E11], [E12], [E13], [E14], [E15]. Признаки, такие как уровни температур горячих и холодных ниток в типичном диапазоне для LOCAC [E11]-[E15] и отсутствие подтверждений для других гипотез [E6], [E7], [E8], [E9], [E10], [E16]-[E25], также указывают на LOCAC как наиболее вероятную причину."
+  },
+  {
+   "scenario": "LR",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.75,
+     "reason": "The score is 0.75 because, despite the overall faithfulness to the retrieval context, there are specific contradictions indicating that certain signs of RI and SGBTR hypotheses were not confirmed or rejected due to observed values not aligning with proposed ranges [E19]-[E28], which suggests a partial mismatch between the actual output and the expected information."
+    },
+    "relevancy": {
+     "score": 0.818,
+     "reason": "The score is 0.82 because the actual output contains irrelevant statements that indicate certain aspects of the automatic check do not require explanation to the operator, such as LR situation explanations and RI signs exclusions, which are not directly relevant to explaining the automated hypothesis checking results for the nuclear power plant state."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 4,
+    "cited": 3,
+    "unknown_citations": 0
+   },
+   "seconds": 77.3,
+   "narrative_rejected": null,
+   "narrative_text": "Проверка показывает высокую вероятность ситуации LR (сброс нагрузки), подтвержденную независимой проверкой и 91% долями подтверждающих свидетельств [E1]-[E8]. Признаки, такие как уровни радиомониторинга паропровода в типичном диапазоне для LR [-0.299; -0.439] и реактивности ядра на краю допустимого диапазона [E5], [E8], поддерживают эту гипотезу. В то же время, признаки RI (введение регулирующих стержней) не подтверждены, а SGBTR (разрыв трубки ПГ B) отклонена из-за несоответствия наблюдаемых значений диапазонам для этой гипотезы [E19]-[E28]. Аналогичные события из базы ETHZ также указывают на LR, подтверждая предположение о сбросе нагрузки в ответ на внешние воздействия."
+  },
+  {
+   "scenario": "RI",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because the actual output contains contradictions: it misinterprets 'typical ranges' as exact data from the context, incorrectly represents uncertainty in RW and SGBTR hypotheses with specific confirmation percentages, and fails to provide concrete evidence for out-of-range deviations mentioned in the context."
+    },
+    "relevancy": {
+     "score": 0.833,
+     "reason": "The score is 0.83 because the actual output contains irrelevant information about RW and SGBTR that do not pertain to the automated verification of hypotheses regarding the state of a nuclear power plant, which are related to RI."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 5,
+    "cited": 3,
+    "unknown_citations": 0
+   },
+   "seconds": 53.6,
+   "narrative_rejected": null,
+   "narrative_text": "Анализ показывает высокую вероятность введения регулирующих стержней (RI) на основе 98% подтверждающих свидетельств [E1]-[E6]. Это подтверждается тенденциями и уровнями измерений, которые находятся в типичных диапазонах для RI. В то же время, гипотезы о RW (извлечении регулирующих стержней) и SGBTR (разрыве трубки ПГ B) имеют низкую уверенность: только 51% подтверждений для RW [E7]-[E16] и всего 14% для SGBTR [E17]-[E23]. Эти данные указывают на отклонения, которые находятся за пределами допустимых диапазонов. Аналогичные события из базы ETHZ также подтверждают вероятность RI [A1]-[A3], где описывается случай с непреднамеренным введением регулирующих стержней вследствие технических проблем."
+  },
+  {
+   "scenario": "RW",
+   "outcome": "identified",
+   "decision": "allow",
+   "judge": {
+    "faithfulness": {
+     "score": 1.0,
+     "reason": "The score is 1.00 because there are no discrepancies between the 'actual output' and the 'retrieval context', as indicated by an empty list of contradictions."
+    },
+    "relevancy": {
+     "score": 1.0,
+     "reason": "The score is 1.00 because all relevant information was provided to address the request for an explanation of the automatic check operator's display regarding hypotheses on the state of a nuclear power plant."
+    }
+   },
+   "violated": [],
+   "narrative": {
+    "sentences": 3,
+    "cited": 3,
+    "unknown_citations": 0
+   },
+   "seconds": 46.0,
+   "narrative_rejected": null,
+   "narrative_text": "Проверка подтверждает гипотезу RW (извлечение регулирующих стержней) с высокой уверенностью 99% [E1][E2][E3][E4][E5][E6][E7][E8][E9]. Свидетельства включают тренды и уровни радиационных показателей, которые находятся на краю или в типичном диапазоне для RW [E1][E2][E3][E4][E5][E6][E7][E8][E9]. Аналогичные события из базы ETHZ также указывают на RW как вероятную причину, поскольку они связаны с непреднамеренным увеличением реактивности ядра [A1][A2][A3]."
+  },
+  {
+   "scenario": "SGATR",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because the actual output contradicts the retrieval context in three ways: (1) it fails to confirm that all observed parameters are within the typical range for SGATR, which suggests a lack of faithfulness; (2) it introduces doubt regarding the certainty of SGATR's parameters, despite high confidence levels mentioned in the context; and (3) it incorrectly implies that deviating f"
+    },
+    "relevancy": {
+     "score": 0.8,
+     "reason": "The score is 0.80 because the actual output rejects another hypothesis that has no direct relation to automatic verification of the state of a nuclear power plant."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 5,
+    "cited": 4,
+    "unknown_citations": 0
+   },
+   "seconds": 50.7,
+   "narrative_rejected": null,
+   "narrative_text": "Проверка подтверждает гипотезу о разрыве трубки парогенератора A (SGATR) с высокой уверенностью [E1][E2][E3][E4][E5]. Все наблюдаемые параметры находятся в типичном диапазоне для этой гипотезы, что указывает на её вероятность. В то же время, некоторые из этих показателей также соответствуют предположениям о разрыве трубки парогенератора B (SGBTR) [E6][E7][E8][E9], но с меньшей уверенностью [E11][E12][E13][E14][E15]. Наконец, гипотеза о течи теплоносителя (LOCA) была отклонена [E16][E17][E18][E19][E20], так как наблюдаемые значения находятся за пределами допустимого диапазона. Аналогичные события из базы ETHZ подтверждают вероятность SGATR, указывая на быстрое увеличение утечки [A1][A2][A3]."
+  },
+  {
+   "scenario": "SGBTR",
+   "outcome": "identified",
+   "decision": "allow",
+   "judge": {
+    "faithfulness": {
+     "score": 0.667,
+     "reason": "The score is 0.67 because, despite the faithfulness score indicating a relatively high level of alignment between the actual output and retrieval context, there exists a contradiction where the generator's confidence in the LOCAC hypothesis is reported as 0%, with only 9% of confirmations out of 16 total (1 for, 15 against), which contradicts the assertion of a 91% probability with certainty."
+    },
+    "relevancy": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because there are no irrelevant statements provided in the list of reasons, which suggests that all output is relevant to the input question about explaining the automatic check operator for hypotheses on the state of a nuclear power plant."
+    }
+   },
+   "violated": [],
+   "narrative": {
+    "sentences": 3,
+    "cited": 3,
+    "unknown_citations": 0
+   },
+   "seconds": 46.0,
+   "narrative_rejected": null,
+   "narrative_text": "Анализ показывает высокую вероятность ситуации SGBTR (разрыв трубки ПГ B) с уверенностью 96%, подтвержденной всеми наблюдаемыми свидетельствами [E1][E2][E3][E4][E5]. Вторая гипотеза SGATR (разрыв трубки ПГ A) имеет низкую вероятность с уверенностью только 3%, и хотя некоторые показатели соответствуют этому сценарию [E6][E7][E8][E9], существуют значительные отклонения, указывающие на его несостоятельность [E10][E11][E12][E13][E14][E15]. Третья гипотеза LOCAC (течь теплоносителя, холодная нитка) была опровергнута с уверенностью 91%, так как большинство наблюдений находятся за пределами допустимых диапазонов [E16][E17][E18][E19][E20][E21]."
+  },
+  {
+   "scenario": "SLBIC",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.714,
+     "reason": "The score is 0.71 because, despite a generally faithful representation of the retrieval context, there are specific discrepancies that need attention: Firstly, the actual output misrepresents the balance of evidence by stating 73% support when the context clearly indicates 11 for and 8 against, which contradicts the assertion of high confidence. Secondly, the claim about confirming the SLBIC hypot"
+    },
+    "relevancy": {
+     "score": 0.8,
+     "reason": "The score is 0.80 because the actual output contains irrelevant information about ETHZ database events that do not directly relate to the current request for explaining the automatic check for nuclear power plant states."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 4,
+    "cited": 3,
+    "unknown_citations": 0
+   },
+   "seconds": 50.2,
+   "narrative_rejected": null,
+   "narrative_text": "Проверка подтверждает гипотезу SLBIC (разрыв паропровода внутри оболочки) с высокой уверенностью — 73% из 19 свидетельств поддерживают эту гипотезу [E1]-[E10]. Изменения в показаниях радийметра воздуха, уровню и температуре парозаборного резервуара, а также изменения давления и объема РЦС указывают на характерные признаки SLBIC. Аналогичные события из базы ETHZ подтверждают эту гипотезу [A1]-[A3]. В то же время, свидетельства для гипотез LOCAC (течь теплоносителя, холодная нитка) и LOCA (течь теплоносителя, горячая нитка) не определены или отклонены соответственно [E11]-[E30], [E21]-[E30]."
+  },
+  {
+   "scenario": "SLBOC",
+   "outcome": "identified",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.8,
+     "reason": "The score is 0.80 because, despite the high faithfulness score indicating a strong alignment with the retrieval context, there are observed indicators that suggest SGBTR and SGATR values may be at or beyond the edge of acceptable limits, potentially exceeding the [E6]–[E15] range, which contradicts the expected output."
+    },
+    "relevancy": {
+     "score": 0.667,
+     "reason": "The score is 0.67 because there are no irrelevant statements provided in the list of reasons, which suggests that all output is relevant to the input question about explaining an operator what automatic check-up hypotheses show regarding the state of a nuclear power plant (АЭС)."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 4,
+    "cited": 2,
+    "unknown_citations": 0
+   },
+   "seconds": 38.0,
+   "narrative_rejected": null,
+   "narrative_text": "Анализ показывает высокую вероятность ситуации SLBOC (разрыв паропровода вне оболочки) на генераторе по 6 каналам, подтвержденную всеми наблюдаемыми свидетельствами [E1]–[E5]. Свидетельства включают уровни температур и давления, которые находятся в типичных диапазонах для SLBOC. В то же время, гипотезы SGBTR (разрыв трубки ПГ B) и SGATR (разрыв трубки ПГ A) были отклонены, так как все наблюдаемые показатели находятся за пределами допустимых диапазонов [E6]–[E15]. Аналогичные события из базы ETHZ также подтверждают вероятность SLBOC."
+  },
+  {
+   "scenario": "TT",
+   "outcome": "novel",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 0.5,
+     "reason": "The score is 0.50 because, despite some indicators being on the edge of acceptable ranges, most evidence does not support hypotheses for RI and SGATR, contradicting the notion of load reset in LR cases."
+    },
+    "relevancy": {
+     "score": 0.75,
+     "reason": "The score is 0.75 because the actual output contains an irrelevant statement regarding the absence of load shedding that does not pertain to the automated hypothesis checking for the status of the nuclear power plant."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY",
+    "DIAGNOSIS_CONFIRMED"
+   ],
+   "narrative": {
+    "sentences": 4,
+    "cited": 3,
+    "unknown_citations": 0
+   },
+   "seconds": 38.2,
+   "narrative_rejected": null,
+   "narrative_text": "Анализ данных показывает, что ни одна из предложенных гипотез (LR, RI и SGATR) не подтверждается наблюдаемыми признаками [E1]-[E24]. При этом LR имеет самую низкую уверенность генератора, но все ее свидетельства отклонены, что указывает на отсутствие сброса нагрузки [E1]-[E9]. Гипотезы RI и SGATR также не подтверждаются большинством своих свидетельств [E10]-[E24], хотя некоторые показатели находятся на краю допустимых диапазонов. Это может указывать на низкую вероятность этих гипотез, но не опровергает их полностью."
+  },
+  {
+   "scenario": "MD",
+   "outcome": "no_anomaly",
+   "decision": "require_human",
+   "judge": {
+    "faithfulness": {
+     "score": 1.0,
+     "reason": "The score is 1.00 because there are no discrepancies between the 'actual output' and the 'retrieval context', as indicated by an empty list of contradictions."
+    },
+    "relevancy": {
+     "score": 1.0,
+     "reason": "The score is 1.00 because all relevant information was provided to address the request for an explanation of the automatic check operator's display regarding hypotheses on the state of a nuclear power plant."
+    }
+   },
+   "violated": [
+    "NO_MODEL_ONLY"
+   ],
+   "narrative": {
+    "sentences": 2,
+    "cited": 0,
+    "unknown_citations": 0
+   },
+   "seconds": 11.1,
+   "narrative_rejected": null,
+   "narrative_text": "Анализ показывает, что на АЭС в течение окна времени 480–590 с отклонений от исходного состояния не выявлено [C1]. Это подтверждает гипотезу о стабильной работе оборудования и систем [B1]."
+  }
+ ]
+}

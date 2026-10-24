@@ -1,0 +1,35 @@
+# Этап E — прогон тестов 2026-10-25 00:18, ветка diploma, перед тегом v1.0-freeze
+# OLLAMA_HOST=http://127.0.0.1:11434 uv run pytest -m "not slow"  (регрессия базового ассистента включена)
+
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/evashelmanova/Documents/atomic
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.1, repeat-0.9.4, xdist-3.8.0, asyncio-1.3.0, deepeval-3.8.9, rerunfailures-16.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 132 items / 2 deselected / 130 selected
+
+tests/contract/test_barrier.py .......                                   [  5%]
+tests/test_atomic.py ..                                                  [  6%]
+tests/unit/test_analogues.py .....                                       [ 10%]
+tests/unit/test_answer_verifier.py .......................               [ 28%]
+tests/unit/test_api_diagnose.py ...                                      [ 30%]
+tests/unit/test_bm25.py .....                                            [ 34%]
+tests/unit/test_contracts.py ........                                    [ 40%]
+tests/unit/test_diagnose_e2e.py .........                                [ 47%]
+tests/unit/test_diagnosis_answer.py ..................                   [ 61%]
+tests/unit/test_generator.py ........                                    [ 67%]
+tests/unit/test_hypothesis_verifier.py ..........                        [ 75%]
+tests/unit/test_knowledge.py .....                                       [ 79%]
+tests/unit/test_novelty.py .....                                         [ 83%]
+tests/unit/test_nppad_loader.py ........                                 [ 89%]
+tests/unit/test_onset.py .....                                           [ 93%]
+
+
+====================== 130 passed, 2 deselected in 41.66s ======================
+
+# uv run pytest -m slow  (LLM-as-a-Judge базового ассистента, deepeval; прогон 25.10 в начале этапа E — путь чата этапом E не менялся)
+tests/test_atomic.py::test_retrieval_answer_relevancy PASSED             [ 50%]
+tests/test_atomic.py::test_analyst_answer_relevancy PASSED               [100%]Running teardown with pytest sessionfinish...
+=========== 2 passed, 124 deselected, 1 warning in 187.56s (0:03:07) ===========
