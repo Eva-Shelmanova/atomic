@@ -201,7 +201,7 @@ def build_processed(
             "subset": "Operation_csv_data",
         },
         "config_version": cfg.version,
-        "config_fingerprint": cfg.fingerprint(),
+        "config_fingerprint": cfg.data_fingerprint(),
         "channel_schema_version": reg.schema_version,
         "channels": list(reg.names),
         "time_step_s": DATA_STEP_S,

@@ -1,5 +1,5 @@
 """
-Vector Memory — семантический поиск (FAISS / in-memory fallback).
+Vector Memory — in-memory хранилище для RAG с поиском BM25 (запасной путь без PostgreSQL).
 """
 
 from typing import Any
@@ -9,7 +9,7 @@ class VectorMemory:
     """
     Векторное хранилище для RAG.
     Production: FAISS, Qdrant, Weaviate.
-    Демо: in-memory список с простым поиском по подстроке.
+    Демо и тесты: in-memory список, поиск BM25 (до этапа B — поиск по подстроке).
     """
 
     def __init__(self):
@@ -35,21 +35,13 @@ class VectorMemory:
 
     def search(self, query: str, top_k: int = 5) -> list[dict]:
         """
-        Поиск по запросу.
-        Демо: простой поиск по вхождению подстроки.
-        Production: embedding + cosine similarity.
+        Поиск по запросу: BM25 по словам и биграммам (atomic/memory/bm25.py).
+        Это запасной путь, когда PostgreSQL + pgvector недоступен;
+        production-поиск — эмбеддинги и косинусная близость (PgVectorMemory).
         """
-        q_lower = query.lower()
-        scored = []
-        for doc in self._docs:
-            content = doc.get("content", "")
-            if q_lower in content.lower():
-                scored.append((1.0, doc))
-            else:
-                # Частичное совпадение слов
-                words = set(q_lower.split()) & set(content.lower().split())
-                if words:
-                    scored.append((len(words) / max(len(q_lower.split()), 1), doc))
+        from atomic.memory.bm25 import BM25
 
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [d for _, d in scored[:top_k]]
+        if not self._docs:
+            return []
+        index = BM25([d.get("content", "") for d in self._docs])
+        return [self._docs[i] for i, _ in index.top(query, k=top_k)]

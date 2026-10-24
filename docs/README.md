@@ -22,6 +22,11 @@
 uv sync
 git clone --depth 1 https://github.com/thu-inet/NuclearPowerPlantAccidentData.git NPPAD/raw
 uv run python scripts/load_nppad.py              # подготовка NPPAD одной командой
+uv run python scripts/load_ethz.py               # база событий ETHZ (нужна папка ETHDB/)
+uv run python scripts/train_generator.py         # генератор гипотез (≈ 40 с)
+uv run python scripts/train_verifier.py          # сигнатуры верификатора гипотез (≈ 1 с)
+uv run python scripts/evaluate_stage_b.py        # промежуточная оценка на val (≈ 5 мин)
+uv run python scripts/demo_diagnosis.py --scenario SGBTR --window 5   # пример для отчёта
 uv run pytest -m "not slow and not llm"          # модульные и контрактные тесты без LLM
 uv run pytest -m "not slow"                      # + регрессия базового ассистента (нужна Ollama)
 ```
@@ -32,3 +37,4 @@ uv run pytest -m "not slow"                      # + регрессия базо
 |---|---|
 | `v0.1-baseline` | Ассистент 6-го семестра (коммит 3ebe05f) — точка отсчёта требования 1 |
 | `v0.2-stage-a` | Завершение этапа A: данные, семантическая модель, контракты, барьер |
+| `v0.3-stage-b` | Завершение этапа B: генератор и верификатор гипотез, аналоги ETHZ, верификатор ответа |

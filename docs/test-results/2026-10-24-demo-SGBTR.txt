@@ -1,0 +1,28 @@
+Окно ade4bce0e108f60c: 300–410 с от начала прогона [для подписи: истинный сценарий SGBTR, тяжесть 11 %]
+Генератор видит каналы: PWNT, TAVG, PSGA, P, PRB, LVPZ
+Генератор gen-1.0.0-hgb-a84ae73fd4:
+  1. Вероятна ситуация SGBTR (разрыв трубки ПГ B), уверенность 84%
+  2. Вероятна ситуация SGATR (разрыв трубки ПГ A), уверенность 15%
+  3. Вероятна ситуация LOCAC (течь теплоносителя, холодная нитка), уверенность 0%
+
+Верификатор hv-1.0.0 (каналов в сигнатурах: 82):
+
+■ SGBTR — ПОДТВЕРЖДЕНА, доля подтверждений 100% (за: 1, против: 0)
+   + Flow SG A steam (t/hr): уровень +0.88σ — в типичном диапазоне для SGBTR [-1.23; +0.88] [вес 0.82, ссылка ade4bce0e108f60c#WSTA]
+   ≈ В аналогичных случаях наблюдалось: INDIAN POINT, United States, 1988: Steam Generator — Unit 3 was operating at full power, when a primary-to-secondary leak was detected (steam gen [ethz:385]
+   ≈ В аналогичных случаях наблюдалось: MCGUIRE, United States, 1989: Steam Generator — The reactor was tripped from 83% power, when a single tube of the Steam Generator (SG) ruptured r [ethz:382]
+
+■ SGATR — ОТКЛОНЕНА, доля подтверждений 0% (за: 0, против: 1)
+   − Flow SG B steam (t/hr): уровень +0.88σ — вне допустимого диапазона для SGATR [-1.23; +0.88] [вес 0.79, ссылка ade4bce0e108f60c#WSTB]
+   ≈ В аналогичных случаях наблюдалось: INDIAN POINT, United States, 1988: Steam Generator — Unit 3 was operating at full power, when a primary-to-secondary leak was detected (steam gen [ethz:385]
+   ≈ В аналогичных случаях наблюдалось: MCGUIRE, United States, 1989: Steam Generator — The reactor was tripped from 83% power, when a single tube of the Steam Generator (SG) ruptured r [ethz:382]
+
+■ LOCAC — ОТКЛОНЕНА, доля подтверждений 7% (за: 1, против: 14)
+   + Mass Total Leakage out of RB (kg): уровень -0.86σ — в типичном диапазоне для LOCAC [-1.00; -0.73] [вес 0.91, ссылка ade4bce0e108f60c#RBLK]
+   − Level RB sump water (M): уровень -0.42σ — вне допустимого диапазона для LOCAC [-0.40; +1.61] [вес 1.00, ссылка ade4bce0e108f60c#LWRB]
+   − Rad Monitor RB air (CPM): уровень -0.37σ — вне допустимого диапазона для LOCAC [+0.18; +5.52] [вес 1.00, ссылка ade4bce0e108f60c#RM1]
+   − Rad Monitor RB air (CPM): тренд +0.00σ — вне допустимого диапазона для LOCAC [+0.00; +0.03] [вес 1.00, ссылка ade4bce0e108f60c#RM1]
+   ≈ В аналогичных случаях наблюдалось: PALO VERDE, United States, 2004: Emergency Core Cooling System (ECCS) — A voided section of Emergency Core Cooling System (ECCS) suction piping d [ethz:775]
+   ≈ В аналогичных случаях наблюдалось: GOLFECH, France, 2020: Primary Cooling System — While the reactor was in operation, a leak on the primary cooling system was identified after ina [ethz:1614]
+
+Система не формирует рекомендаций действий: решение остаётся за оператором.

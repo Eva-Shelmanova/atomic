@@ -1,0 +1,118 @@
+{
+ "created_at": "2026-10-24T16:26:22+00:00",
+ "split": "val",
+ "windows": 16066,
+ "generator_version": "gen-1.0.0-hgb-a84ae73fd4",
+ "verifier_version": "hv-1.0.0|sig-1.0.0-2206424296|analogues-1.0.0+ethz-cc2ace0e610e1fce",
+ "verifier_params": {
+  "min_weight": 0.7,
+  "top_channels": 15,
+  "confirm_threshold": 0.6,
+  "reject_threshold": 0.4
+ },
+ "generator": {
+  "top1": 0.7858,
+  "top3": 0.9983
+ },
+ "verifier": {
+  "true_hypotheses": {
+   "confirmed": 0.7282,
+   "uncertain": 0.2277,
+   "rejected": 0.0441
+  },
+  "wrong_hypotheses": {
+   "confirmed": 0.0402,
+   "uncertain": 0.2184,
+   "rejected": 0.7413
+  },
+  "top1_after_verification": 0.8444,
+  "top1_confirmed_and_correct": 0.6286,
+  "top1_confirmed_but_wrong": 0.01,
+  "evidence_with_channel_window_ref": 1.0,
+  "evidence_per_hypothesis": 6.66
+ },
+ "probes_out_of_distribution": {
+  "windows": 514,
+  "any_hypothesis_confirmed": 0.6926,
+  "top1_confirmed": 0.4339
+ },
+ "latency_ms_per_window": {
+  "generator": 18.518,
+  "hypothesis_verifier": 0.28,
+  "analogues_per_scenario": 1.702
+ },
+ "per_class": {
+  "FLB": {
+   "n": 730,
+   "gen_top1": 0.999,
+   "verified_top1": 0.856,
+   "true_confirmed": 0.789
+  },
+  "LLB": {
+   "n": 1817,
+   "gen_top1": 1.0,
+   "verified_top1": 0.999,
+   "true_confirmed": 0.989
+  },
+  "LOCA": {
+   "n": 1282,
+   "gen_top1": 0.465,
+   "verified_top1": 0.42,
+   "true_confirmed": 0.0
+  },
+  "LOCAC": {
+   "n": 1457,
+   "gen_top1": 0.411,
+   "verified_top1": 0.383,
+   "true_confirmed": 0.002
+  },
+  "LR": {
+   "n": 1822,
+   "gen_top1": 1.0,
+   "verified_top1": 0.996,
+   "true_confirmed": 0.963
+  },
+  "MD": {
+   "n": 1912,
+   "gen_top1": 0.78,
+   "verified_top1": 1.0,
+   "true_confirmed": 1.0
+  },
+  "RI": {
+   "n": 663,
+   "gen_top1": 0.977,
+   "verified_top1": 0.769,
+   "true_confirmed": 0.303
+  },
+  "RW": {
+   "n": 605,
+   "gen_top1": 0.924,
+   "verified_top1": 0.902,
+   "true_confirmed": 0.412
+  },
+  "SGATR": {
+   "n": 1524,
+   "gen_top1": 0.941,
+   "verified_top1": 0.85,
+   "true_confirmed": 0.871
+  },
+  "SGBTR": {
+   "n": 1682,
+   "gen_top1": 0.895,
+   "verified_top1": 0.853,
+   "true_confirmed": 0.879
+  },
+  "SLBIC": {
+   "n": 1003,
+   "gen_top1": 1.0,
+   "verified_top1": 0.997,
+   "true_confirmed": 0.974
+  },
+  "SLBOC": {
+   "n": 1569,
+   "gen_top1": 0.268,
+   "verified_top1": 0.966,
+   "true_confirmed": 0.894
+  }
+ }
+}

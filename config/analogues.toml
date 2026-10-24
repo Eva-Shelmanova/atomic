@@ -1,0 +1,83 @@
+# Соответствие сценариев NPPAD поисковым запросам к базе событий ETHZ (этап B2, D-021).
+#
+# query  — английские ключевые фразы (описания ETHZ на английском), ищутся BM25
+#          по полям description + origin + cause;
+# origin — значения поля Origin_description ETHZ (сверены с базой, регистр не важен), совпадение с которыми
+#          усиливает оценку события (система-источник события).
+# Аналог — не предписание: формулировка «в аналогичных случаях наблюдалось…».
+
+version = "1.0.0"
+origin_boost = 1.5      # множитель оценки при совпадении системы-источника
+min_score = 3.0         # ниже — событие не считается аналогом
+
+[scenario.LOCA]
+query = "loss of coolant accident LOCA reactor coolant leak hot leg pipe break primary leakage"
+origin = ["Primary Cooling System", "Reactor Cooling System", "Reactor Pressure Vessel (RPV)", "Primary Cooling System and PORV"]
+
+[scenario.LOCAC]
+query = "loss of coolant accident LOCA reactor coolant leak cold leg pipe break primary leakage"
+origin = ["Primary Cooling System", "Reactor Cooling System", "Reactor Pressure Vessel (RPV)", "Emergency Core Cooling System (ECCS)"]
+
+[scenario.SLBIC]
+query = "main steam line break steam leak inside containment steam pipe rupture"
+origin = ["Main Steam Line", "Steam Isolation System", "Containment Building"]
+
+[scenario.SLBOC]
+query = "main steam line break steam leak outside containment turbine building steam pipe rupture"
+origin = ["Main Steam Line", "Steam Isolation System", "Turbine Building", "Atmospheric Dump Valves"]
+
+[scenario.SGATR]
+query = "steam generator tube rupture tube leak primary to secondary leakage SGTR"
+origin = ["Steam Generator"]
+
+[scenario.SGBTR]
+query = "steam generator tube rupture tube leak primary to secondary leakage SGTR"
+origin = ["Steam Generator"]
+
+[scenario.FLB]
+query = "feedwater line break feedwater pipe rupture loss of feedwater"
+origin = ["Main Feedwater", "Auxiliary Feedwater"]
+
+[scenario.LLB]
+query = "letdown line break chemical and volume control system CVCS leak auxiliary building"
+origin = ["Chemical and Volume Control System (CVCS)", "Auxiliary Building"]
+
+[scenario.LR]
+query = "load rejection turbine runback generator trip grid disturbance"
+origin = ["Offsite Power Systems", "Plant Electrical Systems", "Turbine Bypass System"]
+
+[scenario.MD]
+query = "boron dilution moderator dilution unborated water boron concentration reactivity"
+origin = ["Boration (PWR)", "Chemical and Volume Control System (CVCS)"]
+
+[scenario.RW]
+query = "control rod withdrawal rod ejection reactivity insertion power excursion"
+origin = ["Reactor Trip System", "Instrumentation and Measurement"]
+
+[scenario.RI]
+query = "control rod insertion dropped rod rod drop control rod misalignment"
+origin = ["Reactor Trip System", "Instrumentation and Measurement"]
+
+[scenario.ATWS]
+query = "anticipated transient without scram failure to scram reactor trip failure"
+origin = ["Reactor Trip System"]
+
+[scenario.LACP]
+query = "loss of offsite power station blackout loss of AC power"
+origin = ["Offsite Power Systems", "Emergency Power System"]
+
+[scenario.LOF]
+query = "reactor coolant pump trip locked rotor loss of flow"
+origin = ["Primary Cooling System", "Reactor coolant pump, Offsite power systems-switchyard"]
+
+[scenario.TT]
+query = "turbine trip turbine stop valve"
+origin = ["Turbine Building", "Turbine Bypass System"]
+
+[scenario.SP]
+query = "hydrogen burn hydrogen explosion hydrogen accumulation"
+origin = []
+
+[scenario.Normal]
+query = ""
+origin = []

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import tomllib
 from dataclasses import dataclass
@@ -77,9 +78,14 @@ class DiagnosticsConfig:
     def version(self) -> str:
         return str(self.raw["config_version"])
 
-    def fingerprint(self) -> str:
-        """Хэш файла конфигурации — пишется в манифесты для воспроизводимости."""
-        return hashlib.sha256(self.path.read_bytes()).hexdigest()[:16]
+    def fingerprint(self, *sections: str) -> str:
+        """Хэш конфигурации для манифестов. sections — только эти разделы (по умолчанию все)."""
+        payload = {s: self.raw.get(s) for s in sections} if sections else self.raw
+        return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
+
+    def data_fingerprint(self) -> str:
+        """Хэш разделов, от которых зависят подготовленные данные (не пороги верификатора)."""
+        return self.fingerprint("seed", "windows", "split", "scenarios", "generator")
 
 
 def load_config(path: str | Path | None = None) -> DiagnosticsConfig:

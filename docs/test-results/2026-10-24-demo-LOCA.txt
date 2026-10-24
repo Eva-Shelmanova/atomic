@@ -1,0 +1,27 @@
+Окно 00f89e960b2f3947: 480–590 с от начала прогона [для подписи: истинный сценарий LOCA, тяжесть 95 %]
+Генератор видит каналы: PWNT, TAVG, PSGA, P, PRB, LVPZ
+Генератор gen-1.0.0-hgb-a84ae73fd4:
+  1. Вероятна ситуация LOCAC (течь теплоносителя, холодная нитка), уверенность 65%
+  2. Вероятна ситуация LOCA (течь теплоносителя, горячая нитка), уверенность 34%
+  3. Вероятна ситуация MD (разбавление замедлителя (борного раствора)), уверенность 0%
+
+Верификатор hv-1.0.0 (каналов в сигнатурах: 82):
+
+■ LOCAC — НЕ ОПРЕДЕЛЕНО, доля подтверждений 0% (за: 0, против: 0)
+   ! нет различающих признаков с достаточным весом
+   ≈ В аналогичных случаях наблюдалось: PALO VERDE, United States, 2004: Emergency Core Cooling System (ECCS) — A voided section of Emergency Core Cooling System (ECCS) suction piping d [ethz:775]
+   ≈ В аналогичных случаях наблюдалось: GOLFECH, France, 2020: Primary Cooling System — While the reactor was in operation, a leak on the primary cooling system was identified after ina [ethz:1614]
+
+■ LOCA — НЕ ОПРЕДЕЛЕНО, доля подтверждений 0% (за: 0, против: 0)
+   ! нет различающих признаков с достаточным весом
+   ≈ В аналогичных случаях наблюдалось: MAINE YANKEE, United States, 1997: Primary Cooling System — Reactor coolant system hot-leg recircuation Motor Operated Valves (MOVs) subject to p [ethz:1001]
+   ≈ В аналогичных случаях наблюдалось: GOLFECH, France, 2020: Primary Cooling System — While the reactor was in operation, a leak on the primary cooling system was identified after ina [ethz:1614]
+
+■ MD — ОТКЛОНЕНА, доля подтверждений 0% (за: 0, против: 15)
+   − Temp RCS average (°C): уровень -1.31σ — вне допустимого диапазона для MD [+0.62; +0.62] [вес 1.00, ссылка 00f89e960b2f3947#TAVG]
+   − Temp Hot leg A (°C): уровень -1.38σ — вне допустимого диапазона для MD [+0.73; +0.73] [вес 1.00, ссылка 00f89e960b2f3947#THA]
+   − Temp Hot leg B (°C): уровень -1.38σ — вне допустимого диапазона для MD [+0.73; +0.73] [вес 1.00, ссылка 00f89e960b2f3947#THB]
+   ≈ В аналогичных случаях наблюдалось: PHILIPPSBURG, Germany, 2001: Boration (PWR) — In the course of the investigations following event “Boron concentration below specification in bor [ethz:248]
+   ≈ В аналогичных случаях наблюдалось: CHINON, France, 1991: Boration (PWR) — A higher than foreseen boron concentration was dicovered on units B1 and B2, due to a calibration error on [ethz:877]
+
+Система не формирует рекомендаций действий: решение остаётся за оператором.
