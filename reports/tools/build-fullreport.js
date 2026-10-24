@@ -20,6 +20,20 @@ for (const raw of md) {
   if (num) { out.push(num[1].length ? `  - ${num[3]}` : `${num[2]}) ${num[3]}`); continue; }
   out.push(line);
 }
+// ширины столбцов таблиц — по длине содержимого (иначе узкий столбец «№» занимает половину ширины)
+for (let i = 0; i < out.length; i++) {
+  if (out[i] !== "@grid") continue;
+  const rows = [];
+  for (let j = i + 1; j < out.length && out[j].startsWith("|"); j++) {
+    const cells = out[j].replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+    if (!cells.every((c) => /^:?-+:?$/.test(c))) rows.push(cells);
+  }
+  const n = rows[0].length;
+  const len = Array.from({ length: n }, (_, k) => Math.min(60, Math.max(4, ...rows.map((r) => (r[k] || "").length))));
+  const total = len.reduce((a, b) => a + b, 0);
+  out.splice(i, 0, "@widths " + len.map((x) => ((100 * x) / total).toFixed(1)).join(","));
+  i++;
+}
 const tmp = path.join(root, "src", ".full-report.resolved.md");
 fs.writeFileSync(tmp, out.join("\n"));
 build({
