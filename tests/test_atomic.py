@@ -24,6 +24,7 @@ EVAL_MODEL = os.getenv("DEEPEVAL_EVAL_MODEL", "qcwind/qwen2.5-7B-instruct-Q4_K_M
 
 
 @pytest.mark.slow
+@pytest.mark.llm
 def test_retrieval_answer_relevancy(workflow):
     """Retriever: ответ должен быть релевантен запросу."""
     from deepeval import assert_test
@@ -41,6 +42,7 @@ def test_retrieval_answer_relevancy(workflow):
     assert_test(test_case, [metric])
 
 
+@pytest.mark.llm
 def test_command_code_execution(workflow):
     """Command: выполнение кода должно вернуть корректный результат (детерминированная проверка)."""
     query = "выполни код print(1+1)"
@@ -51,6 +53,7 @@ def test_command_code_execution(workflow):
 
 
 @pytest.mark.slow
+@pytest.mark.llm
 def test_analyst_answer_relevancy(workflow):
     """Analyst: ответ должен быть релевантен запросу."""
     from deepeval import assert_test
@@ -68,6 +71,7 @@ def test_analyst_answer_relevancy(workflow):
     assert_test(test_case, [metric])
 
 
+@pytest.mark.llm
 def test_retrieval_returns_context(workflow):
     """Retriever: ответ должен содержать информацию из базы знаний."""
     query = "найди информацию об atomic"

@@ -1,0 +1,780 @@
+# Реестр каналов NPPAD (источник: README репозитория thu-inet, Table 2).
+# Сгенерирован из README; правки — вручную с записью в docs/decisions.md.
+#
+# label_proxy = true: величина описывает саму неисправность (расход/энергия течи,
+# течь трубок ПГ, разрыв питательной линии). Такие величины не измеряются
+# штатными приборами и фактически кодируют метку сценария, поэтому
+# не допускаются ни в генератор, ни (по умолчанию) в верификатор. См. D-007.
+
+schema_version = "1.0.0"
+time_column = "TIME"
+# Столбцы, присутствующие в части файлов SLBIC, но отсутствующие в README: отбрасываются (D-005).
+ignored_columns = ["WPCS", "WPMU", "WPFW"]
+
+[[channel]]
+name = "TAVG"
+readme_id = 2
+label = "Temp RCS average (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "THA"
+readme_id = 3
+label = "Temp Hot leg A (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "THB"
+readme_id = 4
+label = "Temp Hot leg B (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "TCA"
+readme_id = 5
+label = "Temp Cold leg A (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "TCB"
+readme_id = 6
+label = "Temp Cold leg B (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "WRCA"
+readme_id = 7
+label = "Flow Reactor coolant loop A (t/hr)"
+unit = "t/hr"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "WRCB"
+readme_id = 8
+label = "Flow Reactor coolant loop B (t/hr)"
+unit = "t/hr"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "PSGA"
+readme_id = 9
+label = "Pressure Steam generator A (bar)"
+unit = "bar"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "PSGB"
+readme_id = 10
+label = "Pressure Steam generator B (bar)"
+unit = "bar"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WFWA"
+readme_id = 11
+label = "Flow SG A feedwater (t/hr)"
+unit = "t/hr"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WFWB"
+readme_id = 12
+label = "Flow SG B feedwater (t/hr)"
+unit = "t/hr"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WSTA"
+readme_id = 13
+label = "Flow SG A steam (t/hr)"
+unit = "t/hr"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WSTB"
+readme_id = 14
+label = "Flow SG B steam (t/hr)"
+unit = "t/hr"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "VOL"
+readme_id = 15
+label = "Volume RCS liquid (M3)"
+unit = "M3"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "LVPZ"
+readme_id = 16
+label = "Level Pressurizer (%)"
+unit = "%"
+subsystem = "pressurizer"
+label_proxy = false
+
+[[channel]]
+name = "VOID"
+readme_id = 17
+label = "Void of RCS (%)"
+unit = "%"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "WLR"
+readme_id = 18
+label = "Flow RCS leak (t/hr)"
+unit = "t/hr"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "WUP"
+readme_id = 19
+label = "Flow Przr PORV and safeties (t/hr)"
+unit = "t/hr"
+subsystem = "pressurizer"
+label_proxy = false
+
+[[channel]]
+name = "HUP"
+readme_id = 20
+label = "Spec Enthalpy Przr discharge (kJ/kg)"
+unit = "kJ/kg"
+subsystem = "pressurizer"
+label_proxy = false
+
+[[channel]]
+name = "HLW"
+readme_id = 21
+label = "Spec Enthalpy RCS leak (kJ/kg)"
+unit = "kJ/kg"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "WHPI"
+readme_id = 22
+label = "Flow HPI (t/hr)"
+unit = "t/hr"
+subsystem = "eccs"
+label_proxy = false
+
+[[channel]]
+name = "WECS"
+readme_id = 23
+label = "Flow Total ECCS (t/hr)"
+unit = "t/hr"
+subsystem = "eccs"
+label_proxy = false
+
+[[channel]]
+name = "QMWT"
+readme_id = 24
+label = "PowerTotal megawatt thermal (MW)"
+unit = "MW"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "LSGA"
+readme_id = 25
+label = "Level SG A wide range (M)"
+unit = "M"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "LSGB"
+readme_id = 26
+label = "Level SG B wide range (M)"
+unit = "M"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "QMGA"
+readme_id = 27
+label = "Power SG A heat removal (MW)"
+unit = "MW"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "QMGB"
+readme_id = 28
+label = "Power SG B heat removal (MW)"
+unit = "MW"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "NSGA"
+readme_id = 29
+label = "Level SG A narrow range (%)"
+unit = "%"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "NSGB"
+readme_id = 30
+label = "Level SG B narrow range (%)"
+unit = "%"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "TBLD"
+readme_id = 31
+label = "Power Turbine load (%)"
+unit = "%"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WTRA"
+readme_id = 32
+label = "Flow SG A tube leak (t/hr)"
+unit = "t/hr"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "WTRB"
+readme_id = 33
+label = "Flow SG B tube leak (t/hr)"
+unit = "t/hr"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "TSAT"
+readme_id = 34
+label = "Temp Przr saturation (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "QRHR"
+readme_id = 35
+label = "Power RHR removal rate (MW)"
+unit = "MW"
+subsystem = "eccs"
+label_proxy = false
+
+[[channel]]
+name = "LVCR"
+readme_id = 36
+label = "Level Core water (M)"
+unit = "M"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "SCMA"
+readme_id = 37
+label = "Temp Loop A subcooling margin (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "SCMB"
+readme_id = 38
+label = "Temp Loop B subcooling margin (°C)"
+unit = "°C"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "FRCL"
+readme_id = 39
+label = "Fraction Clad failure (%)"
+unit = "%"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "PRB"
+readme_id = 40
+label = "Press Reactor building (bar)"
+unit = "bar"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "PRBA"
+readme_id = 41
+label = "Press Partial RB air (bar)"
+unit = "bar"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "TRB"
+readme_id = 42
+label = "Temp Reactor building (°C)"
+unit = "°C"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "LWRB"
+readme_id = 43
+label = "Level RB sump water (M)"
+unit = "M"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "DNBR"
+readme_id = 44
+label = "Ratio Departure from nuclear boiling"
+unit = "-"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "QFCL"
+readme_id = 45
+label = "Power Fan cooler heat removal (MW)"
+unit = "MW"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "WBK"
+readme_id = 46
+label = "Flow Total break entering RB (t/hr)"
+unit = "t/hr"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "WSPY"
+readme_id = 47
+label = "Flow Pressurizer spray (t/hr)"
+unit = "t/hr"
+subsystem = "pressurizer"
+label_proxy = false
+
+[[channel]]
+name = "WCSP"
+readme_id = 48
+label = "Flow Containment spray (t/hr)"
+unit = "t/hr"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "HTR"
+readme_id = 49
+label = "Power Pressurizer heater (KW)"
+unit = "KW"
+subsystem = "pressurizer"
+label_proxy = false
+
+[[channel]]
+name = "MH2"
+readme_id = 50
+label = "Mass H2 generated by Zr-H2O (kg)"
+unit = "kg"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "CNH2"
+readme_id = 51
+label = "Concentration RB hydrogen (%)"
+unit = "%"
+subsystem = "containment"
+label_proxy = false
+
+[[channel]]
+name = "RHBR"
+readme_id = 52
+label = "Reactivity Soluble boron (%dk/k)"
+unit = "%dk/k"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "RHMT"
+readme_id = 53
+label = "Reactivity Mod temp (%dk/k)"
+unit = "%dk/k"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "RHFL"
+readme_id = 54
+label = "Reactivity Fuel (Doppler) (%dk/k)"
+unit = "%dk/k"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "RHRD"
+readme_id = 55
+label = "Reactivity Rod (%dk/k)"
+unit = "%dk/k"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "RH"
+readme_id = 56
+label = "Reactivity Total (%dk/k)"
+unit = "%dk/k"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "PWNT"
+readme_id = 57
+label = "Power Nuclear Flux (%)"
+unit = "%"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "PWR"
+readme_id = 58
+label = "Power Core thermal (%)"
+unit = "%"
+subsystem = "core"
+label_proxy = false
+
+[[channel]]
+name = "TFSB"
+readme_id = 59
+label = "Temp Submerged fuel avg (°C)"
+unit = "°C"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "TFPK"
+readme_id = 60
+label = "Temp Peak fuel (°C)"
+unit = "°C"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "TF"
+readme_id = 61
+label = "Temp Average fuel (°C)"
+unit = "°C"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "TPCT"
+readme_id = 62
+label = "Temp Peak clad (°C)"
+unit = "°C"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "WCFT"
+readme_id = 63
+label = "Flow Accumulator (t/hr)"
+unit = "t/hr"
+subsystem = "eccs"
+label_proxy = false
+
+[[channel]]
+name = "WLPI"
+readme_id = 64
+label = "Flow LPSI (RHR) (t/hr)"
+unit = "t/hr"
+subsystem = "eccs"
+label_proxy = false
+
+[[channel]]
+name = "WCHG"
+readme_id = 65
+label = "Flow Charging (t/hr)"
+unit = "t/hr"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "RM1"
+readme_id = 66
+label = "Rad Monitor RB air (CPM)"
+unit = "CPM"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "RM2"
+readme_id = 67
+label = "Rad Monitor Steam Line (CPM)"
+unit = "CPM"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "RM3"
+readme_id = 68
+label = "Rad Monitor Condenser Off-gas (CPM)"
+unit = "CPM"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "RM4"
+readme_id = 69
+label = "Rad Monitor Aux Building Air (CPM)"
+unit = "CPM"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "RC87"
+readme_id = 70
+label = "Activity RC Coolant (CPM)"
+unit = "CPM"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "RC131"
+readme_id = 71
+label = "Concentration RC I-131 Eq (GBq/cc)"
+unit = "GBq/cc"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "STRB"
+readme_id = 72
+label = "Rad Rel Rate RB (GBq/s)"
+unit = "GBq/s"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "STSG"
+readme_id = 73
+label = "Rad Rel Rate SG Valves (GBq/s)"
+unit = "GBq/s"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "STTB"
+readme_id = 74
+label = "Rad Rel Rate Cdsr Off-gas (GBq/s)"
+unit = "GBq/s"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "RBLK"
+readme_id = 75
+label = "Mass Total Leakage out of RB (kg)"
+unit = "Kg"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "SGLK"
+readme_id = 76
+label = "Mass Total Leakage out of SGs (kg)"
+unit = "Kg"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "DTHY"
+readme_id = 77
+label = "Dose Rate EAB Thyroid (mSv/hr)"
+unit = "mSv/hr"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "DWB"
+readme_id = 78
+label = "Dose Rate EAB Whole Body (mSv/hr)"
+unit = "mSv/hr"
+subsystem = "radiation"
+label_proxy = false
+
+[[channel]]
+name = "P"
+readme_id = 79
+label = "Press RCS (bar)"
+unit = "bar"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "WRLA"
+readme_id = 80
+label = "Flow SG A MSV/ADV (t/h)"
+unit = "t/hr"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WRLB"
+readme_id = 81
+label = "Flow SG B MSV/ADV (t/h)"
+unit = "t/hr"
+subsystem = "secondary"
+label_proxy = false
+
+[[channel]]
+name = "WLD"
+readme_id = 82
+label = "Flow Letdown (t/hr)"
+unit = "t/hr"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "MBK"
+readme_id = 83
+label = "Integrated Break Flow (kg)"
+unit = "Kg"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "EBK"
+readme_id = 84
+label = "Integrated Break Energy (MJ)"
+unit = "MJ"
+subsystem = "break"
+label_proxy = true
+
+[[channel]]
+name = "TKLV"
+readme_id = 85
+label = "Volume RWST Water (M3)"
+unit = "M3"
+subsystem = "eccs"
+label_proxy = false
+
+[[channel]]
+name = "FRZR"
+readme_id = 86
+label = "Fraction Zr Oxidation )%)"
+unit = "%"
+subsystem = "fuel"
+label_proxy = false
+
+[[channel]]
+name = "MDBR"
+readme_id = 87
+label = "Mass of Corium in DW (Kg)"
+unit = "Kg"
+subsystem = "severe_accident"
+label_proxy = false
+
+[[channel]]
+name = "MCRT"
+readme_id = 88
+label = "Mass of molten concrete (Kg)"
+unit = "Kg"
+subsystem = "severe_accident"
+label_proxy = false
+
+[[channel]]
+name = "MGAS"
+readme_id = 89
+label = "Mass of CCI gases (Kg)"
+unit = "Kg"
+subsystem = "severe_accident"
+label_proxy = false
+
+[[channel]]
+name = "TDBR"
+readme_id = 90
+label = "Temp of Debris in Cavity (°C)"
+unit = "°C"
+subsystem = "severe_accident"
+label_proxy = false
+
+[[channel]]
+name = "TSLP"
+readme_id = 91
+label = "Temp of Debris in Lower Plenum (°C)"
+unit = "°C"
+subsystem = "severe_accident"
+label_proxy = false
+
+[[channel]]
+name = "TCRT"
+readme_id = 92
+label = "Temp of Molten Concrete (°C)"
+unit = "°C"
+subsystem = "severe_accident"
+label_proxy = false
+
+[[channel]]
+name = "PPM"
+readme_id = 93
+label = "Concentration RCS Boron (ppm)"
+unit = "ppm"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "RRCA"
+readme_id = 94
+label = "Ratio Loop A Flow"
+unit = "-"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "RRCB"
+readme_id = 95
+label = "Ratio Loop B Flow"
+unit = "-"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "RRCO"
+readme_id = 96
+label = "Ratio Core Flow"
+unit = "-"
+subsystem = "primary"
+label_proxy = false
+
+[[channel]]
+name = "WFLB"
+readme_id = 97
+label = "Flow FW Line Break (kg/s)"
+unit = "kg/s"
+subsystem = "break"
+label_proxy = true

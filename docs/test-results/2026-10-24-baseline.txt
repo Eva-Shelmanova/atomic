@@ -1,0 +1,25 @@
+Sat Oct 24 21:04:33 IST 2026
+dcbee7f
+warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+   Building atomic @ file:///Users/evashelmanova/Documents/atomic
+      Built atomic @ file:///Users/evashelmanova/Documents/atomic
+Uninstalled 1 package in 2ms
+Installed 1 package in 1ms
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0 -- /Users/evashelmanova/Documents/atomic/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/evashelmanova/Documents/atomic
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.1, repeat-0.9.4, xdist-3.8.0, asyncio-1.3.0, deepeval-3.8.9, rerunfailures-16.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items / 2 deselected / 2 selected
+
+tests/test_atomic.py::test_command_code_execution PASSED                 [ 50%]
+tests/test_atomic.py::test_retrieval_returns_context PASSED              [100%]Running teardown with pytest sessionfinish...
+Transient error HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: /api/public/otel/v1/traces (Caused by NewConnectionError("HTTPConnection(host='localhost', port=3000): Failed to establish a new connection: [Errno 61] Connection refused")) encountered while exporting span batch, retrying in 0.89s.
+
+
+======================= 2 passed, 2 deselected in 52.61s =======================
+Transient error HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: /api/public/otel/v1/traces (Caused by NewConnectionError("HTTPConnection(host='localhost', port=3000): Failed to establish a new connection: [Errno 61] Connection refused")) encountered while exporting span batch, retrying in 2.11s.
+Failed to export span batch due to timeout, max retries or shutdown.

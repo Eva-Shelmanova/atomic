@@ -3,7 +3,7 @@ name = "atomic"
 version = "0.1.0"
 description = "AI Agent System — Router, Retriever, Command, Analyst"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
@@ -13,6 +13,8 @@ dependencies = [
     "pgvector>=0.2.0",
     "numpy>=1.24.0",
     "langfuse>=3.0.0",
+    "scikit-learn>=1.5",
+    "openpyxl>=3.1",
 ]
 
 
@@ -35,4 +37,5 @@ pythonpath = ["."]
 addopts = ["-v", "-m", "not slow"]  # по умолчанию только быстрые тесты
 markers = [
     "slow: marks tests as slow (LLM-as-a-Judge). Полные тесты: pytest -m slow",
+    "llm: тест вызывает Ollama (роутер/агенты). Без LLM: pytest -m 'not slow and not llm'",
 ]

@@ -1,0 +1,46 @@
+Sat Oct 24 21:22:37 IST 2026
+commit base: dcbee7f + рабочие изменения этапа A
+warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0 -- /Users/evashelmanova/Documents/atomic/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/evashelmanova/Documents/atomic
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.1, repeat-0.9.4, xdist-3.8.0, asyncio-1.3.0, deepeval-3.8.9, rerunfailures-16.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 32 items / 2 deselected / 30 selected
+
+tests/contract/test_barrier.py::test_restricted_window_type_has_no_label_fields PASSED [  3%]
+tests/contract/test_barrier.py::test_barrier_output_contains_only_allowed_channels PASSED [  6%]
+tests/contract/test_barrier.py::test_window_id_does_not_leak_scenario PASSED [ 10%]
+tests/contract/test_barrier.py::test_config_rejects_label_proxy_channel PASSED [ 13%]
+tests/contract/test_barrier.py::test_default_config_allowed_channels_valid PASSED [ 16%]
+tests/contract/test_barrier.py::test_generator_path_does_not_import_labels PASSED [ 20%]
+tests/contract/test_barrier.py::test_barrier_on_real_nppad_sample PASSED [ 23%]
+tests/test_atomic.py::test_command_code_execution PASSED                 [ 26%]
+tests/test_atomic.py::test_retrieval_returns_context PASSED              [ 30%]
+tests/unit/test_contracts.py::test_evidence_ref_rejects_bad_trust_and_empty_id PASSED [ 33%]
+tests/unit/test_contracts.py::test_claim_strength_is_min_trust_and_zero_without_evidence PASSED [ 36%]
+tests/unit/test_contracts.py::test_rule_severity_validated PASSED        [ 40%]
+tests/unit/test_contracts.py::test_bundle_roundtrip PASSED               [ 43%]
+tests/unit/test_contracts.py::test_hypothesis_set_invariants PASSED      [ 46%]
+tests/unit/test_contracts.py::test_hypothesis_text_has_no_action_recommendation PASSED [ 50%]
+tests/unit/test_contracts.py::test_channel_evidence_to_ref PASSED        [ 53%]
+tests/unit/test_contracts.py::test_observation_window_shape_checked PASSED [ 56%]
+tests/unit/test_knowledge.py::test_every_entity_type_from_roadmap_present PASSED [ 60%]
+tests/unit/test_knowledge.py::test_invalid_relation_rejected PASSED      [ 63%]
+tests/unit/test_knowledge.py::test_node_type_conflict_rejected PASSED    [ 66%]
+tests/unit/test_knowledge.py::test_graph_roundtrip_and_path_window_to_scenario PASSED [ 70%]
+tests/unit/test_knowledge.py::test_schema_mermaid_lists_relations PASSED [ 73%]
+tests/unit/test_nppad_loader.py::test_columns_reordered_to_registry PASSED [ 76%]
+tests/unit/test_nppad_loader.py::test_unexpected_column_rejected PASSED  [ 80%]
+tests/unit/test_nppad_loader.py::test_manifest_and_labels_separate PASSED [ 83%]
+tests/unit/test_nppad_loader.py::test_split_by_runs_disjoint_and_probe_separate PASSED [ 86%]
+tests/unit/test_nppad_loader.py::test_normalization_fitted_on_train_only PASSED [ 90%]
+tests/unit/test_nppad_loader.py::test_windows_shape_ids_and_stride PASSED [ 93%]
+tests/unit/test_nppad_loader.py::test_build_is_deterministic PASSED      [ 96%]
+tests/unit/test_nppad_loader.py::test_stratified_split_fractions PASSED  [100%]Running teardown with pytest sessionfinish...
+
+
+====================== 30 passed, 2 deselected in 40.63s =======================
