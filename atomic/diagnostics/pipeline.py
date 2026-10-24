@@ -69,7 +69,7 @@ class DiagnosticPipeline:
     barrier: InformationBarrier
     margin: float
     onset_lookback: int = 6
-    onset_reset: int = 30
+    onset_reset: int = 12
 
     @classmethod
     def load(cls, config: DiagnosticsConfig | None = None, with_analogues: bool = True) -> DiagnosticPipeline:
@@ -94,7 +94,7 @@ class DiagnosticPipeline:
             barrier=InformationBarrier(config=cfg),
             margin=float(cfg.raw["selection"]["margin"]),
             onset_lookback=int(nov.get("onset_lookback_steps", 6)),
-            onset_reset=int(nov.get("onset_reset_steps", 30)),
+            onset_reset=int(nov.get("onset_reset_steps", 12)),
         )
 
     def onset_track(self, raw: np.ndarray, start: int = 0) -> np.ndarray:
