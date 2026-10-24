@@ -18,3 +18,27 @@ build/
 
 # Large local model artifacts
 models/*.gguf
+
+# macOS
+.DS_Store
+
+# Документы и бинарные материалы (хранятся локально, не в git)
+*.pages
+*.pdf
+*.docx
+*.doc
+*.pptx
+*.xlsm
+*.xlsx
+*.zip
+*.rar
+
+# Сырые и обработанные данные (воспроизводятся скриптами из scripts/)
+NPPAD/raw/
+data/processed/
+data/models/
+ETHDB/
+
+# Кэши инструментов
+.pytest_cache/
+.deepeval/

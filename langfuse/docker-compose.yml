@@ -107,7 +107,8 @@ services:
       start_period: 1s
 
   minio:
-    image: cgr.dev/chainguard/minio
+    # Chainguard (cgr.dev/chainguard/minio) requires registry auth and returns 403 without it.
+    image: docker.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
     restart: always
     entrypoint: sh
     # create the 'langfuse' bucket before starting the service
