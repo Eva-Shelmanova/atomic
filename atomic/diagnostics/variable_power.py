@@ -6,7 +6,7 @@
 - нормальные изменения мощности не должны диагностироваться как аварии;
 - до ввода неисправности — тоже нет; после ввода — ожидается верный сценарий
   или честный исход «новое/не подтверждено» (рабочая точка отличается от обучающей).
-Память о событии строится от причинно обнаруженного начала отклонения (D-039);
+Память о событии строится от причинно обнаруженного начала отклонения (D-039, D-042);
 оракульный режим (момент ввода неисправности из манифеста) оставлен для сравнения.
 """
 
@@ -23,7 +23,6 @@ import numpy as np
 from atomic.contracts.hypothesis import EpisodeContext, ObservationWindow
 from atomic.diagnostics.channels import ChannelRegistry, default_registry
 from atomic.diagnostics.config import PROJECT_ROOT
-from atomic.diagnostics.novelty import AnomalyGate
 from atomic.diagnostics.nppad import DATA_STEP_S, NPPADDataset
 
 VP_DIR = PROJECT_ROOT / "NPPAD" / "raw" / "Variable_Power_csv"
@@ -61,7 +60,7 @@ def _segments(time: np.ndarray) -> list[tuple[int, int]]:
     breaks = np.where(~np.isclose(np.diff(time), DATA_STEP_S))[0]
     starts = [0, *list(breaks + 1)]
     ends = [*list(breaks + 1), len(time)]
-    return list(zip(starts, ends))
+    return list(zip(starts, ends, strict=True))
 
 
 def vp_windows(run: VPRun, ds: NPPADDataset, length: int = 12, stride: int = 6) -> list[ObservationWindow]:
@@ -78,39 +77,24 @@ def vp_windows(run: VPRun, ds: NPPADDataset, length: int = 12, stride: int = 6) 
     return out
 
 
-def stationary_points(run: VPRun, gate: AnomalyGate, lookback: int = 6) -> np.ndarray:
-    """Стационарные точки: ни один наблюдаемый (недрейфующий) канал не изменился больше
-    порога проверки отклонения за последние lookback шагов (60 с). Начало участка — стационар."""
-    seg_start = _segments(run.time)[-1][0]
-    st = np.zeros(len(run.time), dtype=bool)
-    st[seg_start] = True
-    for i in range(seg_start + 1, len(run.time)):
-        st[i] = all(not gate.check(run.raw[i], run.raw[j])[0] for j in range(max(seg_start, i - lookback), i))
-    return st
-
-
-def detect_onset(run: VPRun, gate: AnomalyGate, upto_t: float, stationary: np.ndarray | None = None) -> int:
-    """Причинное начало события: последняя стационарная точка не позже upto_t (D-039).
-    Если станция сейчас в стационаре, начало совпадает с текущей точкой — отклонения нет."""
-    st = stationary_points(run, gate) if stationary is None else stationary
-    last = int(np.searchsorted(run.time, upto_t, side="right")) - 1
-    return int(np.flatnonzero(st[: last + 1])[-1])
+def segment_start(run: VPRun) -> int:
+    """Начало последнего непрерывного участка записи (по нему строятся окна и память о событии)."""
+    return _segments(run.time)[-1][0]
 
 
 def vp_episode(
-    run: VPRun, ds: NPPADDataset, upto_t: float, horizon_s: float = 120.0, gate: AnomalyGate | None = None,
-    stationary: np.ndarray | None = None,
+    run: VPRun, ds: NPPADDataset, upto_t: float, horizon_s: float = 120.0, onsets: np.ndarray | None = None,
 ) -> EpisodeContext:
     """Память о событии для окна, заканчивающегося в upto_t.
 
-    С gate (основной режим, D-039): начало события — последняя стационарная точка
-    (причинно, только прошлое); stationary можно передать заранее посчитанным.
-    Без gate (оракульный режим, только для сравнения): момент ввода неисправности
+    С onsets (основной режим, D-039/D-042): причинно найденное начало события для каждой точки —
+    `DiagnosticPipeline.onset_track(run.raw, segment_start(run))`.
+    Без onsets (оракульный режим, только для сравнения): момент ввода неисправности
     из манифеста, для нормальных прогонов — начало участка.
     """
-    seg_start = _segments(run.time)[-1][0]
-    if gate is not None:
-        onset = detect_onset(run, gate, upto_t, stationary)
+    seg_start = segment_start(run)
+    if onsets is not None:
+        onset = int(onsets[int(np.searchsorted(run.time, upto_t, side="right")) - 1])
     elif run.injection_time_s is not None and upto_t >= run.injection_time_s:
         onset = int(np.searchsorted(run.time, run.injection_time_s, side="right")) - 1
     else:

@@ -1,0 +1,55 @@
+{
+ "trace_id": "27553b4721822faba388cb89c9e4e1dc",
+ "name": "atomic.diagnose",
+ "session_id": "stage-e-trace-5af4f5be",
+ "timestamp": "2026-10-24T19:59:58.128Z",
+ "langfuse_version": "3.175.0",
+ "observations": [
+  "atomic.diagnose",
+  "diagnostics.documents",
+  "diagnostics.hypotheses",
+  "diagnostics.novelty",
+  "diagnostics.verification"
+ ],
+ "reconstructed_path": {
+  "data (window_id)": "00f89e960b2f3947",
+  "hypotheses": [
+   "LOCAC",
+   "LOCA",
+   "LLB"
+  ],
+  "verification": [
+   [
+    "LOCAC",
+    "uncertain"
+   ],
+   [
+    "LOCA",
+    "confirmed"
+   ],
+   [
+    "LLB",
+    "rejected"
+   ]
+  ],
+  "novelty": false,
+  "documents": [
+   "mem:3"
+  ],
+  "outcome": "identified",
+  "claims": 8,
+  "decision": "allow",
+  "rulepack": "aes-core-1.1.0"
+ },
+ "path_complete": true,
+ "metadata_keys": [
+  "diagnosis_outcome",
+  "latency_ms",
+  "resourceAttributes",
+  "scope",
+  "verification",
+  "verification_mode",
+  "versions",
+  "window_id"
+ ]
+}

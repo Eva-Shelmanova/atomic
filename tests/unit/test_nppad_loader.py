@@ -1,6 +1,5 @@
 """Загрузчик и нормализатор NPPAD на синтетическом наборе (требование 2)."""
 
-import json
 
 import numpy as np
 import pytest

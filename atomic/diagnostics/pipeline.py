@@ -40,6 +40,7 @@ from atomic.diagnostics.features import batch_features
 from atomic.diagnostics.generator import HypothesisGenerator
 from atomic.diagnostics.hypothesis_verifier import HypothesisVerifier
 from atomic.diagnostics.novelty import AnomalyGate, NoveltyDetector
+from atomic.diagnostics.onset import onset_track, stationary_points
 from atomic.diagnostics.signatures import ScenarioSignatures
 
 
@@ -67,6 +68,8 @@ class DiagnosticPipeline:
     gate: AnomalyGate
     barrier: InformationBarrier
     margin: float
+    onset_lookback: int = 6
+    onset_reset: int = 30
 
     @classmethod
     def load(cls, config: DiagnosticsConfig | None = None, with_analogues: bool = True) -> DiagnosticPipeline:
@@ -90,7 +93,14 @@ class DiagnosticPipeline:
             gate=gate,
             barrier=InformationBarrier(config=cfg),
             margin=float(cfg.raw["selection"]["margin"]),
+            onset_lookback=int(nov.get("onset_lookback_steps", 6)),
+            onset_reset=int(nov.get("onset_reset_steps", 30)),
         )
+
+    def onset_track(self, raw: np.ndarray, start: int = 0) -> np.ndarray:
+        """Причинное начало события для каждой точки записи (D-042): защёлка до возврата к исходному состоянию."""
+        st = stationary_points(raw, self.gate, start, self.onset_lookback)
+        return onset_track(st, start, self.onset_reset, raw, self.gate)
 
     @property
     def versions(self) -> dict[str, str]:
@@ -129,7 +139,7 @@ class DiagnosticPipeline:
         X = batch_features([self.barrier.restrict(w).values for w in windows])
         proba = self.generator.predict_proba(X)
         out = []
-        for w, ep, p in zip(windows, episodes, proba):
+        for w, ep, p in zip(windows, episodes, proba, strict=True):
             order = np.argsort(-p, kind="stable")[: self.generator.top_k]
             hs = HypothesisSet(
                 window_id=w.window_id,

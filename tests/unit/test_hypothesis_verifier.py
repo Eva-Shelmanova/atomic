@@ -1,6 +1,5 @@
 """Верификатор гипотез: свидетельства «за»/«против», статусы, контрастные веса (этап B2)."""
 
-from pathlib import Path
 
 import numpy as np
 import pytest

@@ -283,20 +283,22 @@ class NPPADDataset:
                 raw_values=raw[sl],
             )
 
-    def episode(self, run_id: str, upto_t: float, horizon_s: float = 120.0) -> EpisodeContext:
-        """Контекст события для окна, заканчивающегося в upto_t: только прошлое (D-030)."""
+    def episode(self, run_id: str, upto_t: float, horizon_s: float = 120.0, onset: int = 0) -> EpisodeContext:
+        """Контекст события для окна, заканчивающегося в upto_t: только прошлое (D-030).
+        onset — индекс начала события (0 — начало записи; причинное определение — onset.py, D-042)."""
         time, raw = self.run_raw(run_id)
         norm = self.normalize(raw)
-        limit = min(float(upto_t), float(time[0]) + horizon_s)
+        limit = min(float(upto_t), float(time[onset]) + horizon_s)
         n = int(np.searchsorted(time, limit, side="right"))
+        key = f"episode:{run_id}" if onset == 0 else f"episode:{run_id}:{onset}"
         return EpisodeContext(
-            episode_id=hashlib.sha256(f"episode:{run_id}".encode()).hexdigest()[:12],
-            onset_window_id=make_window_id(run_id, 0),
+            episode_id=hashlib.sha256(key.encode()).hexdigest()[:12],
+            onset_window_id=make_window_id(run_id, onset),
             channels=self.channels,
-            baseline=norm[0].copy(),
-            early=norm[: max(n, 1)].copy(),
+            baseline=norm[onset].copy(),
+            early=norm[onset : max(n, onset + 1)].copy(),
             step_s=DATA_STEP_S,
-            baseline_raw=raw[0].astype(np.float64).copy(),
+            baseline_raw=raw[onset].astype(np.float64).copy(),
         )
 
     def iter_windows(self, split: str, **kw: Any) -> Iterator[ObservationWindow]:

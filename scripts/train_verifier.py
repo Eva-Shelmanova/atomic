@@ -73,10 +73,10 @@ def main() -> None:
     )
     onset_sig.save(cfg.resolve("models") / "verifier" / "onset")
     print(f"Сигнатуры ранней фазы: {len(channels) * len(ONSET_FEATURES)} признаков, прогонов на сценарий "
-          f"{ {s: int(c) for s, c in zip(onset_sig.scenarios, onset_sig.counts)} }")
+          f"{ {s: int(c) for s, c in zip(onset_sig.scenarios, onset_sig.counts, strict=True)} }")
     print(f"Каналов в сигнатурах: {len(channels)} (исключено label_proxy {len(reg.label_proxies() & excluded)}, "
           f"постоянных {len(constant)}); признаков: {len(channels) * 2}")
-    print("Окон на сценарий:", {s: int(c) for s, c in zip(sig.scenarios, sig.counts)})
+    print("Окон на сценарий:", {s: int(c) for s, c in zip(sig.scenarios, sig.counts, strict=True)})
     print(f"Сохранено {out}; версия {sig.version}; {time.time() - t0:.1f} с")
 
 

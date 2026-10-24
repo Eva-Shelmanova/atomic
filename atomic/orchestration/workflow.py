@@ -13,12 +13,13 @@ Router → Retriever → Command → Analyst → [верификатор отв�
 from dataclasses import dataclass
 
 from atomic.agents.analyst import AnalystAgent
-from atomic.agents.base import AgentResponse, AgentType
+from atomic.agents.base import AgentResponse
 from atomic.agents.command import CommandAgent
 from atomic.agents.retriever import RetrieverAgent
 from atomic.contracts.verification import EvidenceKind, PolicyEffect, VerificationBundle
 from atomic.memory.chat import ChatMemory
 from atomic.memory.factory import create_vector_memory
+from atomic.memory.scenario_kb import find_scenario_docs
 from atomic.router.agent import RouterAgent
 from atomic.tools.code_executor import CodeExecutor
 from atomic.verification import AnswerVerifier, EvidenceResolver, VerificationMode, release_text
@@ -135,7 +136,7 @@ class AtomicWorkflow:
 
         source — источник телеметрии только для чтения (TelemetryReplay). Диагностический ответ
         всегда проходит верификатор ответа в режиме ENFORCE (D-014), независимо от режима чата.
-        Для установленного сценария к ответу добавляются фрагменты базы знаний (справочно, D-040):
+        Для установленного сценария к ответу добавляется справка из базы знаний (D-040, D-043):
         у pgvector — с косинусной близостью не ниже doc_min_score, у BM25 — с ненулевой оценкой.
         Если пояснение LLM приводит к BLOCK, оно отбрасывается и проверяется детерминированный ответ (D-041).
         """
@@ -145,7 +146,7 @@ class AtomicWorkflow:
         pipeline = self._diagnostic_pipeline()
         cfg = default_config()
         window = source.window_at(t)
-        episode = source.episode_for(window)
+        episode = source.episode_for(window, pipeline)
         resolver = EvidenceResolver()
         resolver.register(EvidenceKind.TELEMETRY, source.resolves)
         if pipeline.verifier.analogues is not None:
@@ -163,13 +164,9 @@ class AtomicWorkflow:
                          metadata={"verifier": report.versions.get("verifier"), "episode_memory": report.episode_memory})
             observe_span("diagnostics.novelty", output=report.novelty.to_dict())
             docs = None
-            if report.selected is not None and self.vector_memory is not None:
+            if report.selected is not None:
                 s = report.selected.scenario
-                try:
-                    found = self.vector_memory.search(f"{s} {cfg.scenario_titles.get(s, '')}", top_k=5)
-                except Exception:  # база знаний недоступна — диагностический ответ без справочных материалов
-                    found = []
-                docs = [d for d in found if d.get("score", 1.0) >= doc_min_score]
+                docs = find_scenario_docs(self.vector_memory, s, cfg.scenario_titles.get(s, ""), doc_min_score)
                 observe_span("diagnostics.documents", output=[d.get("id") for d in docs])
             t_range = (window.t_start, window.t_end)
             response = self.analyst.explain_diagnosis(report, cfg.scenario_titles, t_range, use_llm=use_llm, docs=docs)

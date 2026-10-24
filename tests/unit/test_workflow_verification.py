@@ -5,7 +5,6 @@ LLM роутера и агентов подменяется детерминир
 проверяет именно логику шлюза: режимы off / shadow / enforce, запись в память.
 """
 
-import pytest
 
 from atomic.agents.base import AgentResponse, AgentType
 from atomic.contracts.verification import PolicyEffect

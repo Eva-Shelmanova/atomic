@@ -53,7 +53,7 @@ def collect(ds, labels, barrier, gen, sig, onset_sig, split, k):
 
 def evaluate(verifier, hyps, feats, onset, truth, use_onset):
     tc = tn = wc = wn = top1 = 0
-    for h, f, o, t in zip(hyps, feats, onset, truth):
+    for h, f, o, t in zip(hyps, feats, onset, truth, strict=True):
         best, best_key = None, None
         for rank, s in enumerate(h):
             status, ratio, *_ = verifier.verify_one(s, f, "w", h, o if use_onset else None, "o")
@@ -74,7 +74,7 @@ def evaluate(verifier, hyps, feats, onset, truth, use_onset):
 def probe_rate(verifier, hyps, feats, onset, use_onset):
     return float(np.mean([
         any(verifier.verify_one(s, f, "w", h, o if use_onset else None, "o")[0] is VerdictStatus.CONFIRMED for s in h)
-        for h, f, o in zip(hyps, feats, onset)
+        for h, f, o in zip(hyps, feats, onset, strict=True)
     ]))
 
 

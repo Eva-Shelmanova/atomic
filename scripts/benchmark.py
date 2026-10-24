@@ -42,11 +42,14 @@ from atomic.contracts.verification import EvidenceKind, PolicyEffect  # noqa: E4
 from atomic.diagnostics.config import default_config  # noqa: E402
 from atomic.diagnostics.features import batch_features  # noqa: E402
 from atomic.diagnostics.generator import expected_calibration_error, nll, topk_accuracy  # noqa: E402
+from atomic.config import ollama_model_versions  # noqa: E402
 from atomic.diagnostics.labels import LabelStore  # noqa: E402
+from atomic.memory.scenario_kb import find_scenario_docs, seed_scenario_kb  # noqa: E402
+from atomic.memory.vector import VectorMemory  # noqa: E402
 from atomic.diagnostics.nppad import NPPADDataset  # noqa: E402
 from atomic.diagnostics.pipeline import DiagnosticPipeline  # noqa: E402
 from atomic.diagnostics.telemetry import TelemetryReplay  # noqa: E402
-from atomic.diagnostics.variable_power import VPRun, load_vp_runs, stationary_points, vp_episode, vp_windows  # noqa: E402
+from atomic.diagnostics.variable_power import load_vp_runs, segment_start, vp_episode, vp_windows  # noqa: E402
 from atomic.verification import AnswerVerifier, EvidenceResolver  # noqa: E402
 
 R = lambda x: round(float(x), 4)  # noqa: E731
@@ -88,7 +91,7 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
     reps_nomem = pipe.run_batch(W, [None] * len(W))
     for name, rr in (("with_memory", reps), ("window_only", reps_nomem)):
         tc = tn = wc = wn = top1 = 0
-        for rep, t in zip(rr, truth):
+        for rep, t in zip(rr, truth, strict=True):
             best = max(rep.verdicts, key=lambda v: (v.support_ratio, v.hypothesis.confidence))
             top1 += best.hypothesis.scenario == t
             for v in rep.verdicts:
@@ -102,10 +105,10 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
 
     def outcome_block(rr):
         oc = Counter(r.outcome.value for r in rr)
-        ident = [(r, t) for r, t in zip(rr, truth) if r.outcome is DiagnosisOutcome.IDENTIFIED]
+        ident = [(r, t) for r, t in zip(rr, truth, strict=True) if r.outcome is DiagnosisOutcome.IDENTIFIED]
         correct = sum(1 for r, t in ident if r.selected.scenario == t)
         per = defaultdict(Counter)
-        for r, t in zip(rr, truth):
+        for r, t in zip(rr, truth, strict=True):
             per[t]["n"] += 1
             per[t][r.outcome.value] += 1
             if r.outcome is DiagnosisOutcome.IDENTIFIED:
@@ -122,7 +125,20 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
                           for c, v in sorted(per.items())},
         }
 
-    res["outcomes"] = {"with_memory": outcome_block(reps), "window_only": outcome_block(reps_nomem)}
+    # причинное начало события (D-042) — как в эксплуатации, без знания момента ввода неисправности
+    E_det, tracks, agree = [], {}, 0
+    for w, r in zip(W, runs, strict=True):
+        if r not in tracks:
+            t_, raw_ = ds.run_raw(r)
+            tracks[r] = (t_, pipe.onset_track(raw_))
+        t_, tr = tracks[r]
+        on = int(tr[int(np.searchsorted(t_, w.t_end, side="right")) - 1])
+        agree += on == 0
+        E_det.append(ds.episode(r, w.t_end, onset=on))
+    reps_det = pipe.run_batch(W, E_det)
+    res["onset_detector_agreement_test"] = R(agree / len(W))  # доля окон, где найденное начало = начало записи
+    res["outcomes"] = {"with_memory": outcome_block(reps), "with_detected_onset": outcome_block(reps_det),
+                       "window_only": outcome_block(reps_nomem)}
     res["novelty_false_alarm_on_test"] = R(np.mean([r.novelty.novel for r in reps]))
 
     # --- пробы ---
@@ -130,7 +146,7 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
     pW, pE, pR = collect(ds, ds.split("probe"))
     preps = pipe.run_batch(pW, pE)
     pb = defaultdict(Counter)
-    for r, run in zip(preps, pR):
+    for r, run in zip(preps, pR, strict=True):
         s = labels.scenario(run)
         pb[s]["n"] += 1
         pb[s][r.outcome.value] += 1
@@ -147,15 +163,15 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
     # оракульный (момент ввода неисправности из манифеста) — только для сравнения
     vp_runs = load_vp_runs()
 
-    def stress(gate):
+    def stress(detected: bool):
         vp = {}
         for run in vp_runs:
             ws = vp_windows(run, ds)
-            st = stationary_points(run, gate) if gate is not None else None
-            rr = pipe.run_batch(ws, [vp_episode(run, ds, w.t_end, gate=gate, stationary=st) for w in ws])
+            on = pipe.onset_track(run.raw, segment_start(run)) if detected else None
+            rr = pipe.run_batch(ws, [vp_episode(run, ds, w.t_end, onsets=on) for w in ws])
             inj = run.injection_time_s
-            pre = [r for w, r in zip(ws, rr) if inj is None or w.t_end < inj]
-            post = [r for w, r in zip(ws, rr) if inj is not None and w.t_end >= inj]
+            pre = [r for w, r in zip(ws, rr, strict=True) if inj is None or w.t_end < inj]
+            post = [r for w, r in zip(ws, rr, strict=True) if inj is not None and w.t_end >= inj]
             vp[run.scenario] = {
                 "fault": run.fault_code, "windows_before": len(pre), "windows_after": len(post),
                 "false_identified_before": R(np.mean([r.outcome is DiagnosisOutcome.IDENTIFIED for r in pre])) if pre else None,
@@ -174,23 +190,18 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
         }
         return vp
 
-    res["variable_power"] = stress(pipe.gate)
-    res["variable_power_oracle_onset"] = stress(None)
-    # согласованность: на test NPPAD детектор начала должен давать t ≈ 0 (неисправность в 0,5 с)
-    agree = 0
-    for run_id in ds.split("test"):
-        t_, raw_ = ds.run_raw(run_id)
-        st = stationary_points(VPRun("nppad", None, None, t_, raw_), pipe.gate)
-        ns = np.flatnonzero(~st)
-        agree += int(len(ns) > 0 and ns[0] <= 1)
-    res["onset_detector_agreement_test"] = R(agree / len(ds.split("test")))
+    res["variable_power"] = stress(True)
+    res["variable_power_oracle_onset"] = stress(False)
 
     # --- верификатор ответа на детерминированных ответах + контрольные испорченные ответы ---
     analyst = AnalystAgent(llm_client=object())  # LLM не вызывается (use_llm=False)
+    kb = VectorMemory()
+    seed_scenario_kb(kb)  # справка по сценариям (D-043): ссылки [D…] проверяются как RAG_CHUNK
     decisions = Counter()
     per_outcome = defaultdict(Counter)
     tamper = Counter()
     released_bad = 0
+    with_docs = 0
     replays = {}
     sample = list(range(0, len(W), answer_sample_every))
     for i in sample:
@@ -199,10 +210,16 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
         resolver = EvidenceResolver().register(EvidenceKind.TELEMETRY, src.resolves)
         if pipe.verifier.analogues is not None:
             resolver.register(EvidenceKind.HISTORICAL_EVENT, pipe.verifier.analogues.has_event)
+        resolver.register(EvidenceKind.RAG_CHUNK, kb.has_id)
         av = AnswerVerifier(resolver=resolver)
         if pipe.verifier.analogues is not None:  # аналоги для ответа (в run_batch не подбирались)
             rep = pipe.run(w, E[i])
-        resp = analyst.explain_diagnosis(rep, cfg.scenario_titles, (w.t_start, w.t_end))
+        docs = None
+        if rep.selected is not None:
+            s_ = rep.selected.scenario
+            docs = find_scenario_docs(kb, s_, cfg.scenario_titles.get(s_, ""))
+            with_docs += bool(docs)
+        resp = analyst.explain_diagnosis(rep, cfg.scenario_titles, (w.t_start, w.t_end), docs=docs)
         d = av.verify("Что происходит на станции?", resp).decision.effect
         decisions[d.value] += 1
         per_outcome[rep.outcome.value][d.value] += 1
@@ -223,7 +240,7 @@ def evaluate(cfg, ds, labels, pipe, answer_sample_every: int) -> dict:
             tamper[f"{kind}:{eff.value}"] += 1
             released_bad += eff is PolicyEffect.ALLOW
     res["answer_verifier"] = {
-        "pack": AnswerVerifier().pack.pack_id, "sampled_answers": len(sample),
+        "pack": AnswerVerifier().pack.pack_id, "sampled_answers": len(sample), "answers_with_documents": with_docs,
         "decisions": share(decisions, len(sample)),
         "decisions_by_outcome": {o: dict(c) for o, c in sorted(per_outcome.items())},
         "tampered_answers": dict(sorted(tamper.items())), "tampered_released_as_allow": released_bad,
@@ -277,6 +294,7 @@ def versions(cfg, ds, pipe) -> dict:
         "data_config_fingerprint": ds.manifest["config_fingerprint"],
         "config_version": cfg.version,
         "config_fingerprint_full": cfg.fingerprint(),
+        "ollama_models": ollama_model_versions(),  # LLM в метриках не участвует; для полноты паспорта
         "uv_lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest()[:16],
         "python": platform.python_version(),
         "numpy": np.__version__,

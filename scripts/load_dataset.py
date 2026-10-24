@@ -289,6 +289,11 @@ def main() -> None:
 
     print(f"\nФайлов: {loaded_files}, чанков в atomic_documents: {loaded_chunks}.")
 
+    # справка по сценариям NPPAD (dataset/scenarios, D-043): одним документом на сценарий, с меткой сценария
+    from atomic.memory.scenario_kb import seed_scenario_kb
+
+    print(f"Справка по сценариям: добавлено документов {seed_scenario_kb(memory)}.")
+
 
 if __name__ == "__main__":
     main()

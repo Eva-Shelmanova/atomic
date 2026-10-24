@@ -29,7 +29,7 @@ def main() -> None:
         table = AccessParser(str(SRC / scen / "case1.mdb")).parse_table("PlotData")
         cols = [c for c in table if c]
         n = len(table["TIME"])
-        rows = sorted(zip(*[table[c] for c in cols]), key=lambda r: r[cols.index("TIME")])
+        rows = sorted(zip(*[table[c] for c in cols], strict=True), key=lambda r: r[cols.index("TIME")])
         (DST / scen).mkdir(parents=True, exist_ok=True)
         with (DST / scen / "case1.csv").open("w", newline="") as fh:
             w = csv.writer(fh)

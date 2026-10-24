@@ -19,6 +19,7 @@ import uuid
 from atomic.orchestration.workflow import AtomicWorkflow
 from atomic.memory.chat import ChatMemory
 from atomic.memory.demo_seed import seed_demo_vector_memory
+from atomic.memory.scenario_kb import seed_scenario_kb
 from atomic.memory.factory import create_vector_memory
 from atomic.tools.code_executor import CodeExecutor
 
@@ -43,6 +44,7 @@ def run_cli():
     )
     # Демо в БД только при ATOMIC_SEED_DEMO=true и без дубликатов по тексту
     seed_demo_vector_memory(workflow.vector_memory)
+    seed_scenario_kb(workflow.vector_memory)  # справка по сценариям NPPAD (D-043)
 
     # Один session_id на всю CLI-сессию для Langfuse
     session_id = f"cli-{uuid.uuid4().hex[:12]}"

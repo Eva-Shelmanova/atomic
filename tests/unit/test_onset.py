@@ -78,3 +78,24 @@ def test_episode_from_dataset_is_causal():
     full = ds.episode(run, upto_t=5000.0)
     assert full.horizon_s == pytest.approx(120.0)
     assert np.allclose(full.baseline, ds.normalize(ds.run_raw(run)[1])[0])
+
+
+def test_onset_tracker_latches_until_return_to_baseline():
+    from atomic.diagnostics.novelty import AnomalyGate
+    from atomic.diagnostics.onset import onset_track, stationary_points
+
+    gate = AnomalyGate(channel_index=np.array([0]), channel_names=("P",))
+    # стационар 100 → провал до 90 → новый стационар 90 (авария) → возврат к 100 → снова провал
+    x = np.r_[np.full(10, 100.0), np.linspace(100, 90, 5), np.full(40, 90.0), np.linspace(90, 100, 5),
+              np.full(40, 100.0), np.linspace(100, 95, 3), np.full(5, 95.0)]
+    raw = x[:, None]
+    st = stationary_points(raw, gate, lookback=6)
+    latched = onset_track(st, 0, 30, raw, gate)
+    free = onset_track(st, 0, 0)
+    assert latched[9] == 9 and latched[30] == 10 and latched[54] == 10  # новый стационар 90 — событие продолжается
+    assert free[54] > 10  # без защёлки событие сбросилось бы на ненормальном стационаре
+    assert latched[93] == 10 and latched[94] == 94  # сброс: 30 стационарных точек после возврата к 100
+    assert latched[-1] == 100  # новое событие со своим началом
+    for i in range(len(x)):  # причинность: начало не позже текущей точки и зависит только от прошлого
+        assert latched[i] <= i
+        assert onset_track(st[: i + 1], 0, 30, raw[: i + 1], gate)[-1] == latched[i]

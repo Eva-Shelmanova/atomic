@@ -102,8 +102,7 @@ def test_telemetry_replay_resolves_only_own_windows(env):
 
 
 def test_variable_power_loader():
-    from atomic.diagnostics.novelty import AnomalyGate
-    from atomic.diagnostics.variable_power import VP_DIR, detect_onset, load_vp_runs, stationary_points, vp_episode, vp_windows
+    from atomic.diagnostics.variable_power import VP_DIR, load_vp_runs, segment_start, vp_episode, vp_windows
     from atomic.diagnostics.nppad import NPPADDataset
 
     if not (VP_DIR / "manifest.json").exists():
@@ -117,18 +116,18 @@ def test_variable_power_loader():
     ep = vp_episode(loca, ds, upto_t=loca.injection_time_s + 60)
     assert ep.horizon_s <= 60 + 10
 
-    # причинное начало события (D-039): в стационаре до снижения мощности отклонения нет,
-    # во время снижения начало — последняя стационарная точка, не позже текущего момента
+    # причинное начало события (D-039, D-042): во время снижения мощности начало — последняя
+    # стационарная точка до него; станция не возвращается к 100 % — событие не сбрасывается
+    from atomic.diagnostics.pipeline import DiagnosticPipeline
+
+    pipe = DiagnosticPipeline.load(with_analogues=False)
     norm = runs["NORM_100_to_80"]
-    ch = np.arange(len(ds.channels))
-    gate = AnomalyGate(channel_index=ch, channel_names=ds.channels, drift_channels=("HTR", "RBLK", "RHFL", "RHMT"))
-    st = stationary_points(norm, gate)
-    assert st[0] and not st.all()
-    t_move = float(norm.time[np.flatnonzero(~st[30:])[0] + 30])  # первое движение после пускового участка
-    on = detect_onset(norm, gate, t_move + 100, st)
-    assert norm.time[on] < t_move
-    ep = vp_episode(norm, ds, t_move + 100, gate=gate, stationary=st)
-    assert ep.baseline_raw is not None and np.allclose(ep.baseline_raw, norm.raw[on])
+    on = pipe.onset_track(norm.raw, segment_start(norm))
+    i = len(on) - 1
+    assert on[i] < i - 30  # к концу записи событие (снижение мощности) всё ещё длится: защёлка
+    assert norm.time[on[i]] < 600  # и началось до/в начале снижения (≈ 420–520 с), а не в начале записи
+    ep = vp_episode(norm, ds, float(norm.time[i]), onsets=on)
+    assert np.allclose(ep.baseline_raw, norm.raw[on[i]])
 
 
 def test_analogues_prefer_initiating_event():
@@ -139,3 +138,29 @@ def test_analogues_prefer_initiating_event():
     assert res and all(a.match_basis == "initiating_event" for a in res)
     ies = {e["event_id"]: e.get("initiating_event") for e in f.events}
     assert all(ies[a.event_id] == "Steam Generator Tube Rupture" for a in res)
+
+
+def test_window_before_first_end_is_not_served(env):
+    from atomic.diagnostics.telemetry import NotEnoughData, TelemetryReplay
+
+    ds, labels, _ = env
+    src = TelemetryReplay(ds, run_of(ds, labels, "LOCA"))
+    with pytest.raises(NotEnoughData):
+        src.window_at(src.windows[0].t_end - 1)  # иначе в ответ попали бы данные из будущего
+    assert src.window_at(src.windows[0].t_end).window_id == src.windows[0].window_id
+
+
+def test_identified_answer_cites_scenario_reference(env):
+    """Справка по сценарию (D-043) попадает в ответ как [D1] и разрешается верификатором (RAG_CHUNK)."""
+    from atomic.diagnostics.telemetry import TelemetryReplay
+    from atomic.memory.scenario_kb import SCENARIO_KB_DIR, seed_scenario_kb
+
+    if not (SCENARIO_KB_DIR / "LOCA.txt").exists():
+        pytest.skip("справка по сценариям не построена")
+    ds, labels, wf = env
+    seed_scenario_kb(wf.vector_memory)
+    assert seed_scenario_kb(wf.vector_memory) == 0  # повторный вызов не дублирует
+    r = wf.diagnose(TelemetryReplay(ds, run_of(ds, labels, "LOCA")), t=600)
+    docs = [c for c in r.response.metadata["verification"]["claims"] if c["attributes"]["type"] == "document"]
+    assert docs and r.bundle.decision.effect is PolicyEffect.ALLOW
+    assert "[D1]" in r.answer and "dataset/scenarios/LOCA.txt" in r.answer and "LOCAC.txt" not in r.answer

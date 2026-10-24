@@ -67,7 +67,7 @@ def per_class(gen, X, y, classes, k):
         out[c] = {"n": int(m.sum()), "top1": topk_accuracy(cal[m], y[m], 1), f"top{k}": topk_accuracy(cal[m], y[m], k)}
     pred = cal.argmax(axis=1)
     confusion = np.zeros((len(classes), len(classes)), dtype=int)
-    for t, p in zip(y, pred):
+    for t, p in zip(y, pred, strict=True):
         confusion[t, p] += 1
     return out, confusion.tolist()
 

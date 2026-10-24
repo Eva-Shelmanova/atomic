@@ -46,7 +46,7 @@ class BM25:
     def scores(self, query: str) -> list[float]:
         q = tokenize(query, self.bigrams)
         out = []
-        for tf, length in zip(self._tf, self._len):
+        for tf, length in zip(self._tf, self._len, strict=True):
             s = 0.0
             norm = self.k1 * (1 - self.b + self.b * (length / self._avg if self._avg else 0.0))
             for t in q:

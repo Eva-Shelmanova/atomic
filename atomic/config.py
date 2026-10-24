@@ -32,3 +32,21 @@ USE_PGVECTOR = (
 
 # Демо-строки в RAG при старте CLI/API (без дубликатов: вставка только если текста ещё нет в БД)
 SEED_DEMO = os.getenv("ATOMIC_SEED_DEMO", "false").lower().strip() in ("true", "1", "yes")
+
+
+def ollama_model_versions(models: list[str] | None = None, timeout: float = 3.0) -> dict[str, str | None]:
+    """Digest моделей Ollama для паспорта воспроизводимости (требование 13).
+
+    Имя вида `model:latest` может указывать на разные веса; digest — нет. None — модель не найдена
+    или Ollama недоступна (паспорт всё равно пишется).
+    """
+    import json
+    import urllib.request
+
+    models = models or sorted({MODEL_ROUTER, MODEL_RETRIEVER, MODEL_COMMAND, MODEL_ANALYST, MODEL_EMBEDDING})
+    try:
+        with urllib.request.urlopen(f"{OLLAMA_BASE_URL}/api/tags", timeout=timeout) as r:
+            tags = {m["name"]: m.get("digest") for m in json.load(r).get("models", [])}
+    except OSError:
+        tags = {}
+    return {m: tags.get(m) for m in models}

@@ -8,7 +8,6 @@
 import ast
 import copy
 import dataclasses
-from pathlib import Path
 
 import pytest
 

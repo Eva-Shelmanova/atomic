@@ -27,15 +27,25 @@ class DiagnosisText:
     citations: dict[str, dict] = field(default_factory=dict)  # E1/A1/D1 → {"ref_id", "kind", "text"}
 
 
+def _clip(text: str, limit: int) -> str:
+    """Обрезка по границе пункта («; ») или слова, с многоточием."""
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    cut = cut[: cut.rfind("; ")] if "; " in cut else cut.rsplit(" ", 1)[0]
+    return cut.rstrip(" ;,") + "…"
+
+
 def _ref(ref_id: str, kind: str) -> dict:
     return {"ref_id": ref_id, "kind": kind}
 
 
 def build_diagnosis_text(report: DiagnosticReport, titles: dict[str, str], t_range: tuple[float, float] | None = None,
                          max_evidence: int = 5, docs: list[dict] | None = None, max_docs: int = 2,
-                         excerpt_chars: int = 240) -> DiagnosisText:
+                         excerpt_chars: int = 320) -> DiagnosisText:
     """docs — фрагменты базы знаний ({"id", "content", "metadata"}), найденные по установленному сценарию.
-    Фрагменты с указаниями к действию пропускаются (правило NO_DIRECTIVES, инвариант «без рекомендаций»)."""
+    Фрагменты с указаниями к действию пропускаются (правило NO_DIRECTIVES, инвариант «без рекомендаций»).
+    Цитата — пункты списка документа (у справки по сценарию — последовательность событий), иначе начало текста."""
     title = lambda s: f"{s} ({titles.get(s, s)})"  # noqa: E731
     out = report.outcome
     lines: list[str] = []
@@ -107,7 +117,8 @@ def build_diagnosis_text(report: DiagnosticReport, titles: dict[str, str], t_ran
                 lines.append(f"\nСправочные материалы базы знаний по {report.selected.scenario}:")
             for j, d in enumerate(usable, start=1):
                 key = f"D{j}"
-                excerpt = " ".join(d["content"].split())[:excerpt_chars]
+                bullets = [ln[2:].strip() for ln in d["content"].splitlines() if ln.startswith("- ")]
+                excerpt = _clip("; ".join(bullets) if bullets else " ".join(d["content"].split()), excerpt_chars)
                 source = (d.get("metadata") or {}).get("source", "база знаний")
                 cites[key] = {"ref_id": d["id"], "kind": "rag_chunk", "text": excerpt}
                 lines.append(f"  [{key}] «{excerpt}» ({source}, {d['id']})")

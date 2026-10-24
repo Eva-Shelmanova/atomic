@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from atomic.diagnostics.labels import LabelStore  # noqa: E402
 from atomic.diagnostics.nppad import NPPADDataset  # noqa: E402
 from atomic.diagnostics.telemetry import TelemetryReplay  # noqa: E402
+from atomic.memory.scenario_kb import seed_scenario_kb  # noqa: E402
 from atomic.memory.vector import VectorMemory  # noqa: E402
 from atomic.orchestration.workflow import AtomicWorkflow  # noqa: E402
 
@@ -38,6 +39,7 @@ def main() -> None:
     run = [r for r in ds.split(args.split) if labels.scenario(r) == args.scenario][args.run]
     lab = labels.get(run)
     wf = AtomicWorkflow(vector_memory=VectorMemory(), verification_mode="shadow")
+    seed_scenario_kb(wf.vector_memory)
     r = wf.diagnose(TelemetryReplay(ds, run, episode_memory=not args.no_memory), args.t, use_llm=args.llm)
     rep = wf.last_diagnosis
     d = r.bundle.decision
