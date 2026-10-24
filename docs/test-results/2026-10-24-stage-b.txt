@@ -1,5 +1,5 @@
 Sat Oct 24 21:57:35 IST 2026
-коммит-основа: 43cc8b8 + изменения этапа B1/B2
+коммит-основа: 3385ab6 + изменения этапа B1/B2
 tests/unit/test_workflow_verification.py .........                       [100%]Running teardown with pytest sessionfinish...
 
 
