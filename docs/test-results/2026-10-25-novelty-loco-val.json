@@ -1,0 +1,77 @@
+{
+ "quantile": 0.99,
+ "per_class": {
+  "FLB": {
+   "detected_as_novel": 0.367,
+   "by_episode": 0.0,
+   "by_window": 0.367,
+   "false_alarm_known": 0.015
+  },
+  "LLB": {
+   "detected_as_novel": 1.0,
+   "by_episode": 0.939,
+   "by_window": 1.0,
+   "false_alarm_known": 0.016
+  },
+  "LOCA": {
+   "detected_as_novel": 0.04,
+   "by_episode": 0.0,
+   "by_window": 0.04,
+   "false_alarm_known": 0.01
+  },
+  "LOCAC": {
+   "detected_as_novel": 0.077,
+   "by_episode": 0.0,
+   "by_window": 0.077,
+   "false_alarm_known": 0.015
+  },
+  "LR": {
+   "detected_as_novel": 0.989,
+   "by_episode": 0.989,
+   "by_window": 0.186,
+   "false_alarm_known": 0.016
+  },
+  "RI": {
+   "detected_as_novel": 0.907,
+   "by_episode": 0.882,
+   "by_window": 0.116,
+   "false_alarm_known": 0.015
+  },
+  "RW": {
+   "detected_as_novel": 0.102,
+   "by_episode": 0.0,
+   "by_window": 0.102,
+   "false_alarm_known": 0.01
+  },
+  "SGATR": {
+   "detected_as_novel": 0.121,
+   "by_episode": 0.0,
+   "by_window": 0.121,
+   "false_alarm_known": 0.015
+  },
+  "SGBTR": {
+   "detected_as_novel": 0.264,
+   "by_episode": 0.176,
+   "by_window": 0.122,
+   "false_alarm_known": 0.016
+  },
+  "SLBIC": {
+   "detected_as_novel": 0.891,
+   "by_episode": 0.636,
+   "by_window": 0.891,
+   "false_alarm_known": 0.015
+  },
+  "SLBOC": {
+   "detected_as_novel": 0.0,
+   "by_episode": 0.0,
+   "by_window": 0.0,
+   "false_alarm_known": 0.016
+  }
+ },
+ "mean": {
+  "detected_as_novel": 0.433,
+  "by_episode": 0.329,
+  "by_window": 0.275,
+  "false_alarm_known": 0.014
+ }
+}

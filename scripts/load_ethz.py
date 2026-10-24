@@ -5,8 +5,12 @@
     uv run python scripts/load_ethz.py
 
 Источник: ETHDB/ETHZ Curated Nuclear Events Database/Support_file.xlsx,
-лист «ReMerged DB_public (MOST CURRENT)» — 1561 событие.
+лист «ReMerged DB_public (MOST CURRENT)» — 1561 событие. Это тот же лист, из которого
+VBA-макрос ETHZ_Database_Access_tool.xlsm заполняет свои листы Events и Failure Sequences
+(сам инструмент распространяется с пустыми листами, D-027).
 Фильтр (D-020): Industry = Energy, Facility = Plant, OMIT ≠ 1, Type = PWR.
+Кроме описания берутся структурированные поля, которые использует инструмент:
+тип исходного события, система, компонент, частичный отказ и цепочка отказов.
 Результат: data/processed/ethz/events.json.
 """
 
@@ -38,7 +42,30 @@ FIELDS = {
     "Origin_description": "origin",
     "Cause_description": "cause",
     "Core relevant": "core_relevant",
+    "Initiating Event": "initiating_event",
+    "Involved Initiating Event": "involved_initiating_event",
+    "System": "system",
+    "Component": "component",
+    "Short Description": "short_description",
+    "Partial Failure": "partial_failure",
 }
+# Цепочка отказов (как в листе Failure Sequences инструмента): уровень → система.
+SEQUENCE_LEVELS = {"0": "0", "11": "11", "21": "21", "31": "31", "12": "12", "22": "22"}
+
+
+def canonical_ie(value):
+    """Единое написание типа исходного события («Steam Generator Tube rupture» → «… Rupture»)."""
+    if value is None:
+        return None
+    v = " ".join(str(value).split())
+    if not v or v.lower() == "no":
+        return None
+    known = {
+        "steam generator tube rupture": "Steam Generator Tube Rupture",
+        "loss of main feedwater": "Loss of Main Feedwater",
+        "internal flooding": "Flooding Internal",
+    }
+    return known.get(v.lower(), v)
 
 
 def clean(v):
@@ -53,7 +80,7 @@ def clean(v):
 def main() -> None:
     wb = openpyxl.load_workbook(SOURCE, read_only=True, data_only=True)
     ws = next(w for w in wb.worksheets if w.title.startswith(SHEET_PREFIX))
-    rows = ws.iter_rows(values_only=True, max_col=50)
+    rows = ws.iter_rows(values_only=True, max_col=170)
     header = next(rows)
     col = {h: i for i, h in enumerate(header) if h}
     total, kept, reasons = 0, [], {}
@@ -76,6 +103,9 @@ def main() -> None:
             reasons[why] = reasons.get(why, 0) + 1
             continue
         ev = {dst: clean(r[col[src]]) for src, dst in FIELDS.items()}
+        ev["initiating_event"] = canonical_ie(ev["initiating_event"])
+        ev["involved_initiating_event"] = canonical_ie(ev["involved_initiating_event"])
+        ev["failure_sequence"] = {lvl: clean(r[col[c]]) for lvl, c in SEQUENCE_LEVELS.items() if c in col and clean(r[col[c]])}
         ev["event_id"] = f"ethz:{ev['number']}"
         kept.append(ev)
     kept.sort(key=lambda e: int(float(e["number"])))
@@ -92,7 +122,13 @@ def main() -> None:
         "events": kept,
     }
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    from collections import Counter
+
+    ies = Counter(e["initiating_event"] for e in kept if e["initiating_event"])
+    payload["initiating_events"] = dict(ies.most_common())
+    out.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Всего строк: {total}; оставлено PWR-событий: {len(kept)}; исключено: {reasons}")
+    print(f"С размеченным исходным событием: {sum(ies.values())}: {dict(ies.most_common())}")
     print(f"Сохранено: {out}")
 
 

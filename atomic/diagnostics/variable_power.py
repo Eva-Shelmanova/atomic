@@ -1,0 +1,127 @@
+"""
+Внешний стресс-тест: сценарии NPPAD с изменением мощности (Variable_Power_Data, D-029).
+
+12 прогонов (4 нормальных изменения мощности 70–100 %, 8 аварий во время изменения
+мощности) в обучение не входят. Используются для проверки:
+- нормальные изменения мощности не должны диагностироваться как аварии;
+- до ввода неисправности — тоже нет; после ввода — ожидается верный сценарий
+  или честный исход «новое/не подтверждено» (рабочая точка отличается от обучающей).
+Память о событии строится от причинно обнаруженного начала отклонения (D-039);
+оракульный режим (момент ввода неисправности из манифеста) оставлен для сравнения.
+"""
+
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+
+from atomic.contracts.hypothesis import EpisodeContext, ObservationWindow
+from atomic.diagnostics.channels import ChannelRegistry, default_registry
+from atomic.diagnostics.config import PROJECT_ROOT
+from atomic.diagnostics.novelty import AnomalyGate
+from atomic.diagnostics.nppad import DATA_STEP_S, NPPADDataset
+
+VP_DIR = PROJECT_ROOT / "NPPAD" / "raw" / "Variable_Power_csv"
+
+
+@dataclass
+class VPRun:
+    scenario: str  # например LOCA_80_to_100
+    fault_code: str | None  # LOCA / RW / SGATR / SGBTR или None для нормальных
+    injection_time_s: float | None
+    time: np.ndarray
+    raw: np.ndarray  # (T, C) в порядке реестра
+
+    @property
+    def run_key(self) -> str:
+        return hashlib.sha256(f"vp:{self.scenario}".encode()).hexdigest()[:12]
+
+
+def load_vp_runs(root: Path = VP_DIR, registry: ChannelRegistry | None = None) -> list[VPRun]:
+    reg = registry or default_registry()
+    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+    runs = []
+    for scen, meta in sorted(manifest.items()):
+        with (root / scen / "case1.csv").open() as fh:
+            rows = list(csv.reader(fh))
+        col = {h: i for i, h in enumerate(rows[0])}
+        arr = np.asarray(rows[1:], dtype=np.float64)
+        runs.append(VPRun(scen, meta["fault_code"], meta["injection_time_s"], arr[:, col[reg.time_column]],
+                          arr[:, [col[c] for c in reg.names]]))
+    return runs
+
+
+def _segments(time: np.ndarray) -> list[tuple[int, int]]:
+    """Непрерывные участки с шагом 10 с (в части файлов после точки 0 с есть разрыв)."""
+    breaks = np.where(~np.isclose(np.diff(time), DATA_STEP_S))[0]
+    starts = [0, *list(breaks + 1)]
+    ends = [*list(breaks + 1), len(time)]
+    return list(zip(starts, ends))
+
+
+def vp_windows(run: VPRun, ds: NPPADDataset, length: int = 12, stride: int = 6) -> list[ObservationWindow]:
+    norm = ds.normalize(run.raw.astype(np.float32))
+    out = []
+    for a, b in _segments(run.time):
+        for st in range(a, b - length + 1, stride):
+            sl = slice(st, st + length)
+            out.append(ObservationWindow(
+                window_id=hashlib.sha256(f"{run.run_key}:{st}".encode()).hexdigest()[:16], run_id=run.run_key,
+                t_start=float(run.time[st]), t_end=float(run.time[st + length - 1]), channels=ds.channels,
+                values=norm[sl], raw_values=run.raw[sl].astype(np.float32),
+            ))
+    return out
+
+
+def stationary_points(run: VPRun, gate: AnomalyGate, lookback: int = 6) -> np.ndarray:
+    """Стационарные точки: ни один наблюдаемый (недрейфующий) канал не изменился больше
+    порога проверки отклонения за последние lookback шагов (60 с). Начало участка — стационар."""
+    seg_start = _segments(run.time)[-1][0]
+    st = np.zeros(len(run.time), dtype=bool)
+    st[seg_start] = True
+    for i in range(seg_start + 1, len(run.time)):
+        st[i] = all(not gate.check(run.raw[i], run.raw[j])[0] for j in range(max(seg_start, i - lookback), i))
+    return st
+
+
+def detect_onset(run: VPRun, gate: AnomalyGate, upto_t: float, stationary: np.ndarray | None = None) -> int:
+    """Причинное начало события: последняя стационарная точка не позже upto_t (D-039).
+    Если станция сейчас в стационаре, начало совпадает с текущей точкой — отклонения нет."""
+    st = stationary_points(run, gate) if stationary is None else stationary
+    last = int(np.searchsorted(run.time, upto_t, side="right")) - 1
+    return int(np.flatnonzero(st[: last + 1])[-1])
+
+
+def vp_episode(
+    run: VPRun, ds: NPPADDataset, upto_t: float, horizon_s: float = 120.0, gate: AnomalyGate | None = None,
+    stationary: np.ndarray | None = None,
+) -> EpisodeContext:
+    """Память о событии для окна, заканчивающегося в upto_t.
+
+    С gate (основной режим, D-039): начало события — последняя стационарная точка
+    (причинно, только прошлое); stationary можно передать заранее посчитанным.
+    Без gate (оракульный режим, только для сравнения): момент ввода неисправности
+    из манифеста, для нормальных прогонов — начало участка.
+    """
+    seg_start = _segments(run.time)[-1][0]
+    if gate is not None:
+        onset = detect_onset(run, gate, upto_t, stationary)
+    elif run.injection_time_s is not None and upto_t >= run.injection_time_s:
+        onset = int(np.searchsorted(run.time, run.injection_time_s, side="right")) - 1
+    else:
+        onset = seg_start
+    onset = max(onset, seg_start)
+    limit = min(upto_t, run.time[onset] + horizon_s)
+    end = int(np.searchsorted(run.time, limit, side="right"))
+    norm = ds.normalize(run.raw.astype(np.float32))
+    return EpisodeContext(
+        episode_id=hashlib.sha256(f"episode:{run.run_key}:{onset}".encode()).hexdigest()[:12],
+        onset_window_id=hashlib.sha256(f"{run.run_key}:{onset}".encode()).hexdigest()[:16],
+        channels=ds.channels, baseline=norm[onset].copy(), early=norm[onset:max(end, onset + 1)].copy(),
+        step_s=DATA_STEP_S, baseline_raw=run.raw[onset].copy(),
+    )

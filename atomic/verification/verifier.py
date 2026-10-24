@@ -58,7 +58,8 @@ class AnswerVerifier:
                 evidence.append(
                     EvidenceRef(ref_id=str(e["ref_id"]), kind=kind, trust_base=self._trust(kind), locator=e.get("locator"))
                 )
-            claims.append(Claim(claim_id=str(c.get("claim_id") or f"c{i}"), text=str(c.get("text", "")), evidence=tuple(evidence)))
+            claims.append(Claim(claim_id=str(c.get("claim_id") or f"c{i}"), text=str(c.get("text", "")),
+                                evidence=tuple(evidence), attributes=dict(c.get("attributes", {}))))
         return tuple(claims)
 
     def verify_claims(self, query: str, claims: tuple[Claim, ...], agent: str | None = None) -> VerificationBundle:

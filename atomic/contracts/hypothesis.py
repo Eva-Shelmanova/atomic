@@ -50,6 +50,30 @@ class ObservationWindow:
 
 
 @dataclass(frozen=True, eq=False)
+class EpisodeContext:
+    """Память о текущем событии для верификатора (D-030).
+
+    baseline — состояние станции непосредственно перед началом события (z-значения, все каналы);
+    early — наблюдения с начала события, но не дальше конца текущего окна (причинность)
+    и не дальше горизонта ранней фазы; шаг 10 с, early[0] — момент начала.
+    В NPPAD начало события = начало прогона (неисправность вводится в 0,5 с, точка 0 с —
+    исходное стационарное состояние). В эксплуатации — момент первой сигнализации.
+    """
+
+    episode_id: str
+    onset_window_id: str  # окно, начинающееся в момент начала события (ссылка для свидетельств)
+    channels: tuple[str, ...]
+    baseline: np.ndarray  # (C,)
+    early: np.ndarray  # (n, C)
+    step_s: float = 10.0
+    baseline_raw: np.ndarray | None = None  # (C,) исходное состояние в физических единицах
+
+    @property
+    def horizon_s(self) -> float:
+        return (len(self.early) - 1) * self.step_s
+
+
+@dataclass(frozen=True, eq=False)
 class RestrictedWindow:
     """Вход генератора: только разрешённые каналы, без run_id, времени и меток.
 
@@ -177,6 +201,7 @@ class EventAnalogue:
     summary: str
     score: float
     matched_terms: tuple[str, ...] = ()
+    match_basis: str = "text"  # "initiating_event" — совпал размеченный тип исходного события ETHZ
 
     def describe(self) -> str:
         return f"В аналогичных случаях наблюдалось: {self.title} — {self.summary}"
@@ -195,6 +220,31 @@ class EventAnalogue:
             "summary": self.summary,
             "score": self.score,
             "matched_terms": list(self.matched_terms),
+            "match_basis": self.match_basis,
+        }
+
+
+@dataclass(frozen=True)
+class NoveltyAssessment:
+    """Есть ли отклонение от исходного состояния и похоже ли событие на известные сценарии (D-032)."""
+
+    anomaly: bool  # хотя бы min_channels каналов отклонились от исходного состояния
+    deviating_channels: tuple[str, ...]
+    novel: bool  # событие не похоже ни на один известный сценарий
+    episode_score: float | None  # расстояние до ближайшего известного события (по ранней фазе)
+    episode_threshold: float
+    window_score: float  # расстояние до ближайшего известного окна
+    window_threshold: float
+    nearest_scenario: str | None
+    basis: str  # "episode+window" или "window"
+    detector_version: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "anomaly": self.anomaly, "deviating_channels": list(self.deviating_channels), "novel": self.novel,
+            "episode_score": self.episode_score, "episode_threshold": self.episode_threshold,
+            "window_score": self.window_score, "window_threshold": self.window_threshold,
+            "nearest_scenario": self.nearest_scenario, "basis": self.basis, "detector_version": self.detector_version,
         }
 
 
@@ -227,4 +277,45 @@ class HypothesisVerdict:
             "analogues": [a.to_dict() for a in self.analogues],
             "verifier_version": self.verifier_version,
             "notes": list(self.notes),
+        }
+
+
+class DiagnosisOutcome(str, Enum):
+    NO_ANOMALY = "no_anomaly"  # отклонений от исходного состояния не обнаружено
+    NOVEL = "novel"  # событие не похоже ни на один известный сценарий
+    UNCONFIRMED = "unconfirmed"  # ни одна гипотеза не подтверждена
+    AMBIGUOUS = "ambiguous"  # подтверждено несколько гипотез с близкой поддержкой
+    IDENTIFIED = "identified"  # одна гипотеза подтверждена и заметно сильнее остальных
+
+
+@dataclass(frozen=True)
+class DiagnosticReport:
+    """Итог левого контура по одному окну: гипотезы, проверка, новизна, исход (D-033)."""
+
+    window_id: str
+    hypotheses: HypothesisSet
+    verdicts: tuple[HypothesisVerdict, ...]
+    novelty: NoveltyAssessment
+    outcome: DiagnosisOutcome
+    selected: ScenarioHypothesis | None
+    candidates: tuple[str, ...]  # сценарии, которые остаются в рассмотрении
+    episode_memory: bool
+    versions: dict[str, str] = field(default_factory=dict)
+    latency_ms: dict[str, float] = field(default_factory=dict)
+
+    def verdict(self, scenario: str) -> HypothesisVerdict | None:
+        return next((v for v in self.verdicts if v.hypothesis.scenario == scenario), None)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "window_id": self.window_id,
+            "hypotheses": self.hypotheses.to_dict(),
+            "verdicts": [v.to_dict() for v in self.verdicts],
+            "novelty": self.novelty.to_dict(),
+            "outcome": self.outcome.value,
+            "selected": self.selected.to_dict() if self.selected else None,
+            "candidates": list(self.candidates),
+            "episode_memory": self.episode_memory,
+            "versions": dict(self.versions),
+            "latency_ms": dict(self.latency_ms),
         }

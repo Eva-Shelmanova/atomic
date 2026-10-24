@@ -23,7 +23,7 @@ DEFAULT_MAPPING = PROJECT_ROOT / "config" / "analogues.toml"
 
 
 def _summary(ev: dict[str, Any], limit: int = 220) -> str:
-    text = " ".join((ev.get("description") or "").split())
+    text = " ".join((ev.get("short_description") or ev.get("description") or "").split())
     return text if len(text) <= limit else text[: limit - 1].rsplit(" ", 1)[0] + "…"
 
 
@@ -67,27 +67,30 @@ class AnalogueFinder:
     def has_event(self, event_id: str) -> bool:
         return event_id in self._ids
 
-    def find(self, scenario: str, k: int = 3) -> list[EventAnalogue]:
+    def find(self, scenario: str, k: int = 3, use_initiating_events: bool = True) -> list[EventAnalogue]:
         spec = self.mapping.get("scenario", {}).get(scenario)
         if not spec or not spec.get("query"):
             return []
+        ies = {i.lower() for i in spec.get("initiating_events", [])} if use_initiating_events else set()
         query = spec["query"]
         origins = {o.lower() for o in spec.get("origin", [])}
         boost = float(self.mapping.get("origin_boost", 1.0))
         min_score = float(self.mapping.get("min_score", 0.0))
         scored = []
         for i, s in enumerate(self._index.scores(query)):
-            if s <= 0:
-                continue
             ev = self.events[i]
+            if s <= 0 and not (ies and (ev.get("initiating_event") or "").lower() in ies):
+                continue
             if origins and (ev.get("origin") or "").lower() in origins:
                 s *= boost
-            if s >= min_score:
-                scored.append((s, i))
-        scored.sort(key=lambda x: (-x[0], x[1]))
+            ie_match = bool(ies) and (ev.get("initiating_event") or "").lower() in ies
+            if s >= min_score or ie_match:
+                scored.append((ie_match, s, i))
+        # Сначала структурные совпадения по типу исходного события, внутри — по BM25.
+        scored.sort(key=lambda x: (not x[0], -x[1], x[2]))
         out = []
         seen: set[tuple] = set()
-        for s, i in scored:
+        for ie_match, s, i in scored:
             if len(out) == k:
                 break
             ev = self.events[i]
@@ -103,6 +106,7 @@ class AnalogueFinder:
                     summary=_summary(ev),
                     score=round(float(s), 3),
                     matched_terms=tuple(terms[:8]),
+                    match_basis="initiating_event" if ie_match else "text",
                 )
             )
         return out

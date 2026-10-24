@@ -1,0 +1,530 @@
+{
+ "created_at": "2026-10-24T17:18:57+00:00",
+ "split": "test",
+ "versions": {
+  "generator": "gen-1.0.0-hgb-1a0fecad01",
+  "verifier": "hv-1.1.0|sig-1.0.0-affd161cd6|onset:sig-1.0.0-affd161cd6|analogues-1.1.0+ethz-cc2ace0e610e1fce",
+  "novelty": "nov-1.0.0-5208735f8e",
+  "rulepack": "aes-core-1.1.0",
+  "data_source_commit": "a8d54ed0ed2c037bd39938d51f46c8f0df94b002",
+  "data_config_fingerprint": "d8676aaf07a1ac3b",
+  "config_version": "1.1.0",
+  "config_fingerprint_full": "0de1b4223906b054",
+  "uv_lock_sha256": "fe60eb17db26005a",
+  "python": "3.12.12",
+  "numpy": "2.4.3",
+  "scikit_learn": "1.9.1",
+  "seed": 42
+ },
+ "metrics": {
+  "test_windows": 13984,
+  "test_runs": 222,
+  "generator": {
+   "top1": 0.8884,
+   "top3": 0.9961,
+   "ece_raw": 0.0479,
+   "ece_calibrated": 0.0276,
+   "nll_calibrated": 0.2207
+  },
+  "verifier": {
+   "with_memory": {
+    "true_confirmed": 0.947,
+    "wrong_confirmed": 0.0499,
+    "top1_after_verification": 0.9783
+   },
+   "window_only": {
+    "true_confirmed": 0.6866,
+    "wrong_confirmed": 0.0407,
+    "top1_after_verification": 0.8474
+   }
+  },
+  "outcomes": {
+   "with_memory": {
+    "outcomes": {
+     "ambiguous": 0.0446,
+     "identified": 0.8882,
+     "no_anomaly": 0.0004,
+     "novel": 0.0142,
+     "unconfirmed": 0.0528
+    },
+    "identified_precision": 0.9985,
+    "identified_coverage": 0.8882,
+    "identified_wrong_share_of_all": 0.0014,
+    "per_class": {
+     "FLB": {
+      "n": 671,
+      "identified": 0.9791,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0015,
+      "novel": 0.0134,
+      "no_anomaly": 0.006
+     },
+     "LLB": {
+      "n": 1816,
+      "identified": 0.9846,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0154,
+      "novel": 0.0,
+      "no_anomaly": 0.0
+     },
+     "LOCA": {
+      "n": 1236,
+      "identified": 0.4595,
+      "identified_precision": 1.0,
+      "ambiguous": 0.504,
+      "unconfirmed": 0.0,
+      "novel": 0.0364,
+      "no_anomaly": 0.0
+     },
+     "LOCAC": {
+      "n": 1454,
+      "identified": 0.9188,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.064,
+      "novel": 0.0172,
+      "no_anomaly": 0.0
+     },
+     "LR": {
+      "n": 1824,
+      "identified": 0.869,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.1206,
+      "novel": 0.0104,
+      "no_anomaly": 0.0
+     },
+     "RI": {
+      "n": 662,
+      "identified": 0.926,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0136,
+      "novel": 0.0604,
+      "no_anomaly": 0.0
+     },
+     "RW": {
+      "n": 563,
+      "identified": 0.9254,
+      "identified_precision": 0.9635,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.071,
+      "novel": 0.0036,
+      "no_anomaly": 0.0
+     },
+     "SGATR": {
+      "n": 1507,
+      "identified": 0.923,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0703,
+      "novel": 0.0066,
+      "no_anomaly": 0.0
+     },
+     "SGBTR": {
+      "n": 1681,
+      "identified": 0.9459,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0506,
+      "novel": 0.0036,
+      "no_anomaly": 0.0
+     },
+     "SLBIC": {
+      "n": 985,
+      "identified": 0.8467,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.1107,
+      "novel": 0.0426,
+      "no_anomaly": 0.0
+     },
+     "SLBOC": {
+      "n": 1585,
+      "identified": 0.9697,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0297,
+      "novel": 0.0,
+      "no_anomaly": 0.0006
+     }
+    }
+   },
+   "window_only": {
+    "outcomes": {
+     "ambiguous": 0.0655,
+     "identified": 0.6232,
+     "novel": 0.0142,
+     "unconfirmed": 0.2971
+    },
+    "identified_precision": 0.9854,
+    "identified_coverage": 0.6232,
+    "identified_wrong_share_of_all": 0.0091,
+    "per_class": {
+     "FLB": {
+      "n": 671,
+      "identified": 0.845,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0015,
+      "unconfirmed": 0.1401,
+      "novel": 0.0134,
+      "no_anomaly": 0.0
+     },
+     "LLB": {
+      "n": 1816,
+      "identified": 0.978,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.022,
+      "novel": 0.0,
+      "no_anomaly": 0.0
+     },
+     "LOCA": {
+      "n": 1236,
+      "identified": 0.0008,
+      "identified_precision": 0.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.9628,
+      "novel": 0.0364,
+      "no_anomaly": 0.0
+     },
+     "LOCAC": {
+      "n": 1454,
+      "identified": 0.0007,
+      "identified_precision": 0.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.9821,
+      "novel": 0.0172,
+      "no_anomaly": 0.0
+     },
+     "LR": {
+      "n": 1824,
+      "identified": 0.8871,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0258,
+      "unconfirmed": 0.0768,
+      "novel": 0.0104,
+      "no_anomaly": 0.0
+     },
+     "RI": {
+      "n": 662,
+      "identified": 0.3746,
+      "identified_precision": 0.7177,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.565,
+      "novel": 0.0604,
+      "no_anomaly": 0.0
+     },
+     "RW": {
+      "n": 563,
+      "identified": 0.0462,
+      "identified_precision": 0.4615,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.9503,
+      "novel": 0.0036,
+      "no_anomaly": 0.0
+     },
+     "SGATR": {
+      "n": 1507,
+      "identified": 0.5912,
+      "identified_precision": 0.982,
+      "ambiguous": 0.2906,
+      "unconfirmed": 0.1115,
+      "novel": 0.0066,
+      "no_anomaly": 0.0
+     },
+     "SGBTR": {
+      "n": 1681,
+      "identified": 0.7091,
+      "identified_precision": 1.0,
+      "ambiguous": 0.2469,
+      "unconfirmed": 0.0405,
+      "novel": 0.0036,
+      "no_anomaly": 0.0
+     },
+     "SLBIC": {
+      "n": 985,
+      "identified": 0.8832,
+      "identified_precision": 0.9713,
+      "ambiguous": 0.0152,
+      "unconfirmed": 0.0589,
+      "novel": 0.0426,
+      "no_anomaly": 0.0
+     },
+     "SLBOC": {
+      "n": 1585,
+      "identified": 0.9621,
+      "identified_precision": 1.0,
+      "ambiguous": 0.0,
+      "unconfirmed": 0.0379,
+      "novel": 0.0,
+      "no_anomaly": 0.0
+     }
+    }
+   }
+  },
+  "novelty_false_alarm_on_test": 0.0142,
+  "probes": {
+   "ATWS": {
+    "group": "no_event",
+    "windows": 95,
+    "expected": "no_anomaly",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "no_anomaly": 1.0
+    }
+   },
+   "LACP": {
+    "group": "out_of_scope",
+    "windows": 83,
+    "expected": "novel",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "novel": 1.0
+    }
+   },
+   "LOF": {
+    "group": "out_of_scope",
+    "windows": 84,
+    "expected": "novel",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "novel": 1.0
+    }
+   },
+   "MD": {
+    "group": "no_event",
+    "windows": 9697,
+    "expected": "no_anomaly",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "no_anomaly": 1.0
+    }
+   },
+   "Normal": {
+    "group": "out_of_scope",
+    "windows": 49,
+    "expected": "novel",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "novel": 1.0
+    }
+   },
+   "SP": {
+    "group": "no_event",
+    "windows": 84,
+    "expected": "no_anomaly",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "no_anomaly": 1.0
+    }
+   },
+   "TT": {
+    "group": "out_of_scope",
+    "windows": 119,
+    "expected": "novel",
+    "as_expected": 1.0,
+    "identified": 0.0,
+    "outcomes": {
+     "novel": 1.0
+    }
+   }
+  },
+  "variable_power": {
+   "LOCA_100_to_80": {
+    "fault": "LOCA",
+    "windows_before": 14,
+    "windows_after": 48,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   },
+   "LOCA_80_to_100": {
+    "fault": "LOCA",
+    "windows_before": 14,
+    "windows_after": 31,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   },
+   "NORM_100_to_80": {
+    "fault": null,
+    "windows_before": 61,
+    "windows_after": 0,
+    "false_identified_before": 0.0,
+    "after_outcomes": null,
+    "after_correct_identified": null,
+    "after_wrong_identified": null
+   },
+   "NORM_70_to_90": {
+    "fault": null,
+    "windows_before": 41,
+    "windows_after": 0,
+    "false_identified_before": 0.0,
+    "after_outcomes": null,
+    "after_correct_identified": null,
+    "after_wrong_identified": null
+   },
+   "NORM_80_to_100": {
+    "fault": null,
+    "windows_before": 36,
+    "windows_after": 0,
+    "false_identified_before": 0.0,
+    "after_outcomes": null,
+    "after_correct_identified": null,
+    "after_wrong_identified": null
+   },
+   "NORM_90_to_70": {
+    "fault": null,
+    "windows_before": 46,
+    "windows_after": 0,
+    "false_identified_before": 0.0,
+    "after_outcomes": null,
+    "after_correct_identified": null,
+    "after_wrong_identified": null
+   },
+   "RW_100_to_80": {
+    "fault": "RW",
+    "windows_before": 14,
+    "windows_after": 49,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   },
+   "RW_80_to_100": {
+    "fault": "RW",
+    "windows_before": 14,
+    "windows_after": 30,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   },
+   "SGATR_100_to_80": {
+    "fault": "SGATR",
+    "windows_before": 14,
+    "windows_after": 52,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   },
+   "SGATR_80_to_100": {
+    "fault": "SGATR",
+    "windows_before": 14,
+    "windows_after": 29,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "identified": 0.0345,
+     "novel": 0.9655
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0345
+   },
+   "SGBTR_100_to_80": {
+    "fault": "SGBTR",
+    "windows_before": 14,
+    "windows_after": 52,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   },
+   "SGBTR_80_to_100": {
+    "fault": "SGBTR",
+    "windows_before": 14,
+    "windows_after": 29,
+    "false_identified_before": 0.0,
+    "after_outcomes": {
+     "novel": 1.0
+    },
+    "after_correct_identified": 0.0,
+    "after_wrong_identified": 0.0
+   }
+  },
+  "answer_verifier": {
+   "pack": "aes-core-1.1.0",
+   "sampled_answers": 560,
+   "decisions": {
+    "allow": 0.8875,
+    "require_human": 0.1125
+   },
+   "decisions_by_outcome": {
+    "ambiguous": {
+     "require_human": 27
+    },
+    "identified": {
+     "allow": 497
+    },
+    "novel": {
+     "require_human": 7
+    },
+    "unconfirmed": {
+     "require_human": 29
+    }
+   },
+   "tampered_answers": {
+    "dangling_ref:block": 560,
+    "directive:block": 560,
+    "no_refs:block": 560
+   },
+   "tampered_released_as_allow": 0
+  },
+  "analogues": {
+   "text": {
+    "precision_at_3_labelled": 0.6429,
+    "labelled": 28
+   },
+   "combined": {
+    "precision_at_3_labelled": 0.9362,
+    "labelled": 47
+   }
+  }
+ },
+ "latency": {
+  "generator": {
+   "p50_ms": 17.567,
+   "p95_ms": 31.7642
+  },
+  "hypothesis_verifier": {
+   "p50_ms": 4.7335,
+   "p95_ms": 6.0724
+  },
+  "novelty": {
+   "p50_ms": 3.131,
+   "p95_ms": 3.9976
+  },
+  "total_with_analogues": {
+   "p50_ms": 25.6361,
+   "p95_ms": 41.7331
+  },
+  "windows": 300
+ },
+ "runtime_s": 125.8,
+ "reproducibility": {
+  "identical_metrics_on_repeat": true
+ }
+}

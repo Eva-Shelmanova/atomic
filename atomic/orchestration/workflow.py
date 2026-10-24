@@ -16,7 +16,7 @@ from atomic.agents.analyst import AnalystAgent
 from atomic.agents.base import AgentResponse, AgentType
 from atomic.agents.command import CommandAgent
 from atomic.agents.retriever import RetrieverAgent
-from atomic.contracts.verification import EvidenceKind, VerificationBundle
+from atomic.contracts.verification import EvidenceKind, PolicyEffect, VerificationBundle
 from atomic.memory.chat import ChatMemory
 from atomic.memory.factory import create_vector_memory
 from atomic.router.agent import RouterAgent
@@ -113,6 +113,88 @@ class AtomicWorkflow:
         # В память попадает только выпущенный текст (заглушка вместо заблокированного ответа).
         self.chat_memory.add("assistant", answer)
         return VerifiedAnswer(answer=answer, response=response, bundle=bundle, mode=self.verification_mode)
+
+    # --- диагностический контур (этап C) ---
+    def _diagnostic_pipeline(self):
+        if getattr(self, "_pipeline", None) is None:
+            from atomic.diagnostics.pipeline import DiagnosticPipeline
+
+            self._pipeline = DiagnosticPipeline.load()
+        return self._pipeline
+
+    def diagnose(
+        self,
+        source,
+        t: float,
+        query: str = "Что происходит на станции?",
+        use_llm: bool = False,
+        session_id: str | None = None,
+        doc_min_score: float = 0.6,
+    ) -> VerifiedAnswer:
+        """Окно телеметрии → гипотезы → проверка → ответ AnalystAgent → PolicyDecision (требования 8–10).
+
+        source — источник телеметрии только для чтения (TelemetryReplay). Диагностический ответ
+        всегда проходит верификатор ответа в режиме ENFORCE (D-014), независимо от режима чата.
+        Для установленного сценария к ответу добавляются фрагменты базы знаний (справочно, D-040):
+        у pgvector — с косинусной близостью не ниже doc_min_score, у BM25 — с ненулевой оценкой.
+        Если пояснение LLM приводит к BLOCK, оно отбрасывается и проверяется детерминированный ответ (D-041).
+        """
+        from atomic.diagnostics.config import default_config
+        from atomic.observability.langfuse import observe_span, trace_ask
+
+        pipeline = self._diagnostic_pipeline()
+        cfg = default_config()
+        window = source.window_at(t)
+        episode = source.episode_for(window)
+        resolver = EvidenceResolver()
+        resolver.register(EvidenceKind.TELEMETRY, source.resolves)
+        if pipeline.verifier.analogues is not None:
+            resolver.register(EvidenceKind.HISTORICAL_EVENT, pipeline.verifier.analogues.has_event)
+        if hasattr(self.vector_memory, "has_id"):
+            resolver.register(EvidenceKind.RAG_CHUNK, self.vector_memory.has_id)
+        verifier = AnswerVerifier(resolver=resolver)
+
+        self.chat_memory.add("user", query)
+        with trace_ask(query, session_id=session_id, name="atomic.diagnose") as span:
+            report = pipeline.run(window, episode)
+            observe_span("diagnostics.hypotheses", output=report.hypotheses.to_dict(),
+                         metadata={"generator": report.versions.get("generator")})
+            observe_span("diagnostics.verification", output=[v.to_dict() for v in report.verdicts],
+                         metadata={"verifier": report.versions.get("verifier"), "episode_memory": report.episode_memory})
+            observe_span("diagnostics.novelty", output=report.novelty.to_dict())
+            docs = None
+            if report.selected is not None and self.vector_memory is not None:
+                s = report.selected.scenario
+                try:
+                    found = self.vector_memory.search(f"{s} {cfg.scenario_titles.get(s, '')}", top_k=5)
+                except Exception:  # база знаний недоступна — диагностический ответ без справочных материалов
+                    found = []
+                docs = [d for d in found if d.get("score", 1.0) >= doc_min_score]
+                observe_span("diagnostics.documents", output=[d.get("id") for d in docs])
+            t_range = (window.t_start, window.t_end)
+            response = self.analyst.explain_diagnosis(report, cfg.scenario_titles, t_range, use_llm=use_llm, docs=docs)
+            bundle = verifier.verify(query, response)
+            rejected = None
+            if use_llm and bundle.decision.effect is PolicyEffect.BLOCK:
+                # пояснение LLM не прошло проверку → выпускается только детерминированная часть (D-041)
+                rejected = bundle
+                stats, narrative = response.metadata.get("narrative_stats"), response.metadata.get("narrative_text")
+                response = self.analyst.explain_diagnosis(report, cfg.scenario_titles, t_range, use_llm=False, docs=docs)
+                violated = ", ".join(rejected.decision.violated_rule_ids)
+                response.content += f"\n\n[Пояснение языковой модели не выпущено: верификатор ответа заблокировал его ({violated}).]"
+                response.metadata.update(narrative_stats=stats, narrative_text=narrative, narrative_rejected=rejected.to_dict())
+                bundle = verifier.verify(query, response)
+            answer = release_text(response.content, bundle)
+            if span is not None:
+                span.update(output=answer, metadata={
+                    "verification_mode": "enforce", "verification": bundle.to_dict(),
+                    "diagnosis_outcome": report.outcome.value, "versions": report.versions,
+                    "latency_ms": report.latency_ms, "window_id": window.window_id,
+                    "narrative_rejected": None if rejected is None else rejected.to_dict(),
+                })
+        self.chat_memory.add("assistant", answer)
+        self.last_diagnosis = report
+        return VerifiedAnswer(answer=answer, response=response, bundle=bundle, mode=VerificationMode.ENFORCE)
 
     def ask(self, query: str, session_id: str | None = None) -> str:
         """

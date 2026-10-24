@@ -70,6 +70,8 @@ class Claim:
     claim_id: str
     text: str  # формулировка, которую показываем и проверяем
     evidence: tuple[EvidenceRef, ...] = ()  # пустой tuple = «нет опоры» → правила режут
+    # Машинные атрибуты для правил (этап C): например {"type": "diagnosis", "outcome": "identified"}.
+    attributes: dict[str, Any] = field(default_factory=dict, hash=False, compare=False)
 
     def strength(self) -> float:
         """Сила утверждения = min trust_base по его свидетельствам (0, если их нет)."""
@@ -82,6 +84,7 @@ class Claim:
             "claim_id": self.claim_id,
             "text": self.text,
             "evidence": [e.to_dict() for e in self.evidence],
+            "attributes": dict(self.attributes),
         }
 
     @classmethod
@@ -90,6 +93,7 @@ class Claim:
             claim_id=str(d["claim_id"]),
             text=str(d.get("text", "")),
             evidence=tuple(EvidenceRef.from_dict(e) for e in d.get("evidence", [])),
+            attributes=dict(d.get("attributes", {})),
         )
 
 

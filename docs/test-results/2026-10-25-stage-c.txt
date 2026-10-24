@@ -1,0 +1,29 @@
+# Этап C — прогон тестов 2026-10-24 22:30, ветка diploma (до коммита v0.4-stage-c)
+# uv run pytest -m "not slow"  (Ollama запущена: регрессия базового ассистента включена)
+
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/evashelmanova/Documents/atomic
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.1, repeat-0.9.4, xdist-3.8.0, asyncio-1.3.0, deepeval-3.8.9, rerunfailures-16.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 126 items / 2 deselected / 124 selected
+
+tests/contract/test_barrier.py .......                                   [  5%]
+tests/test_atomic.py ..                                                  [  7%]
+tests/unit/test_analogues.py .....                                       [ 11%]
+tests/unit/test_answer_verifier.py .......................               [ 29%]
+tests/unit/test_bm25.py .....                                            [ 33%]
+tests/unit/test_contracts.py ........                                    [ 40%]
+tests/unit/test_diagnose_e2e.py .......                                  [ 45%]
+tests/unit/test_diagnosis_answer.py ..................                   [ 60%]
+tests/unit/test_generator.py ........                                    [ 66%]
+tests/unit/test_hypothesis_verifier.py ..........                        [ 75%]
+tests/unit/test_knowledge.py .....                                       [ 79%]
+tests/unit/test_novelty.py .....                                         [ 83%]
+tests/unit/test_nppad_loader.py ........                                 [ 89%]
+tests/unit/test_onset.py ....                                            [ 92%]
+
+
+====================== 124 passed, 2 deselected in 36.10s ======================

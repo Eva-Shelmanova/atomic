@@ -21,7 +21,12 @@ from atomic.diagnostics.channels import default_registry  # noqa: E402
 from atomic.diagnostics.config import default_config  # noqa: E402
 from atomic.diagnostics.labels import LabelStore  # noqa: E402
 from atomic.diagnostics.nppad import NPPADDataset  # noqa: E402
-from atomic.diagnostics.signatures import ScenarioSignatures, run_window_features  # noqa: E402
+from atomic.diagnostics.signatures import (  # noqa: E402
+    ONSET_FEATURES,
+    ScenarioSignatures,
+    onset_features,
+    run_window_features,
+)
 
 
 def main() -> None:
@@ -36,13 +41,18 @@ def main() -> None:
     idx = np.array([ds.channels.index(c) for c in channels])
 
     feats: dict[str, list[np.ndarray]] = {s: [] for s in cfg.benchmark_scenarios}
+    onset: dict[str, list[np.ndarray]] = {s: [] for s in cfg.benchmark_scenarios}
     for run_id in ds.split("train"):
         _, raw = ds.run_raw(run_id)
-        norm = ds.normalize(raw)[:, idx]
+        full = ds.normalize(raw)
+        norm = full[:, idx]
         f = run_window_features(norm, cfg.window_length, cfg.window_stride)
         if len(f):
             feats[labels.scenario(run_id)].append(f)
+        # ранняя фаза: один вектор на прогон (исходное состояние — точка 0 с)
+        onset[labels.scenario(run_id)].append(onset_features(full[0], full[:13], idx)[None, :])
     by_scenario = {s: np.concatenate(v) for s, v in feats.items()}
+    onset_by_scenario = {s: np.concatenate(v) for s, v in onset.items()}
 
     fp_src = f"{ds.manifest['source']['commit']}|{ds.manifest['config_fingerprint']}|{','.join(channels)}"
     sig = ScenarioSignatures.build(
@@ -57,6 +67,13 @@ def main() -> None:
         },
     )
     out = sig.save(cfg.resolve("models") / "verifier")
+    onset_sig = ScenarioSignatures.build(
+        onset_by_scenario, channels, idx, metadata={**sig.metadata, "family": "onset", "built_on": "train (1 вектор на прогон)"},
+        feature_labels=ONSET_FEATURES,
+    )
+    onset_sig.save(cfg.resolve("models") / "verifier" / "onset")
+    print(f"Сигнатуры ранней фазы: {len(channels) * len(ONSET_FEATURES)} признаков, прогонов на сценарий "
+          f"{ {s: int(c) for s, c in zip(onset_sig.scenarios, onset_sig.counts)} }")
     print(f"Каналов в сигнатурах: {len(channels)} (исключено label_proxy {len(reg.label_proxies() & excluded)}, "
           f"постоянных {len(constant)}); признаков: {len(channels) * 2}")
     print("Окон на сценарий:", {s: int(c) for s, c in zip(sig.scenarios, sig.counts)})

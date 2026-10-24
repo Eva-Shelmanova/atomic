@@ -30,7 +30,7 @@ from typing import Any
 
 import numpy as np
 
-from atomic.contracts.hypothesis import ObservationWindow
+from atomic.contracts.hypothesis import EpisodeContext, ObservationWindow
 from atomic.diagnostics.channels import ChannelRegistry, default_registry
 from atomic.diagnostics.config import PROJECT_ROOT, DiagnosticsConfig, default_config
 from atomic.diagnostics.labels import LabelStore, RunLabel
@@ -282,6 +282,22 @@ class NPPADDataset:
                 values=norm[sl],
                 raw_values=raw[sl],
             )
+
+    def episode(self, run_id: str, upto_t: float, horizon_s: float = 120.0) -> EpisodeContext:
+        """Контекст события для окна, заканчивающегося в upto_t: только прошлое (D-030)."""
+        time, raw = self.run_raw(run_id)
+        norm = self.normalize(raw)
+        limit = min(float(upto_t), float(time[0]) + horizon_s)
+        n = int(np.searchsorted(time, limit, side="right"))
+        return EpisodeContext(
+            episode_id=hashlib.sha256(f"episode:{run_id}".encode()).hexdigest()[:12],
+            onset_window_id=make_window_id(run_id, 0),
+            channels=self.channels,
+            baseline=norm[0].copy(),
+            early=norm[: max(n, 1)].copy(),
+            step_s=DATA_STEP_S,
+            baseline_raw=raw[0].astype(np.float64).copy(),
+        )
 
     def iter_windows(self, split: str, **kw: Any) -> Iterator[ObservationWindow]:
         for run_id in self.split(split):

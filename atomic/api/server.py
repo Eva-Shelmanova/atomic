@@ -59,6 +59,36 @@ def chat(
     return ChatResponse(response=workflow.ask(req.message, session_id=session_id))
 
 
+class DiagnoseRequest(BaseModel):
+    run_id: str  # непрозрачный id прогона NPPAD (воспроизведение телеметрии, только чтение)
+    t: float  # момент времени от начала записи, с
+    explain: bool = False  # добавить пояснение LLM (каждое предложение — со ссылками)
+    session_id: str | None = None
+
+
+class DiagnoseResponse(BaseModel):
+    response: str
+    decision: str
+    outcome: str
+    verification: dict
+
+
+@app.post("/diagnose", response_model=DiagnoseResponse)
+def diagnose(req: DiagnoseRequest) -> DiagnoseResponse:
+    """Диагностика по окну телеметрии: гипотезы → проверка → ответ → решение политики (этап C)."""
+    from atomic.diagnostics.nppad import NPPADDataset
+    from atomic.diagnostics.telemetry import TelemetryReplay
+
+    if not workflow:
+        return DiagnoseResponse(response="Сервис не инициализирован.", decision="block", outcome="", verification={})
+    source = TelemetryReplay(NPPADDataset(), req.run_id)
+    r = workflow.diagnose(source, req.t, use_llm=req.explain, session_id=req.session_id)
+    return DiagnoseResponse(
+        response=r.answer, decision=r.bundle.decision.effect.value,
+        outcome=workflow.last_diagnosis.outcome.value, verification=r.bundle.to_dict(),
+    )
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

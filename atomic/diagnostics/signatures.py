@@ -11,6 +11,12 @@
 отличает s от o. Верификатор использует её как вес свидетельства.
 
 Каналы label_proxy и каналы, постоянные на train, в сигнатуры не входят (D-007).
+
+Два семейства сигнатур (D-030):
+- оконные (level, slope) — по текущему окну;
+- ранней фазы (d30, d60, d120) — изменение каждого канала через 30, 60 и 120 с
+  после начала события относительно исходного состояния. Строятся по одному
+  вектору на train-прогон; отсутствующие (прогон короче) значения — NaN.
 """
 
 from __future__ import annotations
@@ -23,6 +29,8 @@ import numpy as np
 
 QUANTILES = (0.01, 0.05, 0.50, 0.95, 0.99)
 FEATURES = ("level", "slope")
+ONSET_OFFSETS_S = (30, 60, 120)
+ONSET_FEATURES = tuple(f"d{s}" for s in ONSET_OFFSETS_S)
 SIGNATURES_SCHEMA = "1.0.0"
 
 
@@ -44,6 +52,16 @@ def run_window_features(norm: np.ndarray, length: int, stride: int) -> np.ndarra
     return window_matrix_features(np.transpose(view, (0, 2, 1)).astype(np.float64))
 
 
+def onset_features(baseline: np.ndarray, early: np.ndarray, channel_index: np.ndarray, step_s: float = 10.0) -> np.ndarray:
+    """(C_all,), (n, C_all) → (len(channel_index) * 3,): Δ через 30/60/120 с; NaN, если ещё не наблюдалось."""
+    out = np.full((len(channel_index), len(ONSET_OFFSETS_S)), np.nan)
+    for j, off in enumerate(ONSET_OFFSETS_S):
+        k = int(round(off / step_s))
+        if k < len(early):
+            out[:, j] = early[k, channel_index] - baseline[channel_index]
+    return out.reshape(-1)
+
+
 @dataclass
 class ScenarioSignatures:
     scenarios: tuple[str, ...]
@@ -51,12 +69,13 @@ class ScenarioSignatures:
     channel_index: np.ndarray  # индексы этих каналов в порядке датасета
     quantiles: np.ndarray  # (S, P, 5), P = len(channels) * 2
     specificity: np.ndarray  # (S, S, P)
-    counts: np.ndarray  # (S,) число train-окон
+    counts: np.ndarray  # (S,) число train-окон (или прогонов для сигнатур ранней фазы)
     metadata: dict
+    feature_labels: tuple[str, ...] = FEATURES
 
     @property
     def pairs(self) -> list[tuple[str, str]]:
-        return [(c, f) for c in self.channels for f in FEATURES]
+        return [(c, f) for c in self.channels for f in self.feature_labels]
 
     @property
     def version(self) -> str:
@@ -74,22 +93,30 @@ class ScenarioSignatures:
         channels: tuple[str, ...],
         channel_index: np.ndarray,
         metadata: dict | None = None,
+        feature_labels: tuple[str, ...] = FEATURES,
     ) -> ScenarioSignatures:
         scenarios = tuple(sorted(features_by_scenario))
-        S, P = len(scenarios), len(channels) * 2
-        q = np.zeros((S, P, len(QUANTILES)))
+        S, P = len(scenarios), len(channels) * len(feature_labels)
+        q = np.full((S, P, len(QUANTILES)), np.nan)
         for i, s in enumerate(scenarios):
-            q[i] = np.quantile(features_by_scenario[s], QUANTILES, axis=0).T
+            F = features_by_scenario[s]
+            ok = ~np.all(np.isnan(F), axis=0)
+            if ok.any():
+                q[i][ok] = np.nanquantile(F[:, ok], QUANTILES, axis=0).T
         spec = np.zeros((S, S, P))
-        for i in range(S):
-            lo, hi = q[i, :, 1], q[i, :, 3]
-            for j, o in enumerate(scenarios):
-                if i == j:
-                    continue
-                F = features_by_scenario[o]
-                spec[i, j] = ((F < lo) | (F > hi)).mean(axis=0)
+        with np.errstate(invalid="ignore"):
+            for i in range(S):
+                lo, hi = q[i, :, 1], q[i, :, 3]
+                for j, o in enumerate(scenarios):
+                    if i == j:
+                        continue
+                    F = features_by_scenario[o]
+                    valid = ~np.isnan(F) & ~np.isnan(lo) & ~np.isnan(hi)
+                    out = ((F < lo) | (F > hi)) & valid
+                    n = valid.sum(axis=0)
+                    spec[i, j] = np.where(n > 0, out.sum(axis=0) / np.maximum(n, 1), 0.0)
         counts = np.array([len(features_by_scenario[s]) for s in scenarios])
-        return cls(scenarios, tuple(channels), np.asarray(channel_index), q, spec, counts, metadata or {})
+        return cls(scenarios, tuple(channels), np.asarray(channel_index), q, spec, counts, metadata or {}, tuple(feature_labels))
 
     def save(self, directory: Path) -> Path:
         directory.mkdir(parents=True, exist_ok=True)
@@ -99,7 +126,7 @@ class ScenarioSignatures:
             channel_index=self.channel_index,
         )
         meta = {**self.metadata, "version": self.version, "scenarios": list(self.scenarios),
-                "channels": list(self.channels), "features": list(FEATURES), "quantiles": list(QUANTILES)}
+                "channels": list(self.channels), "features": list(self.feature_labels), "quantiles": list(QUANTILES)}
         (directory / "signatures.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
         return path
 
@@ -111,4 +138,5 @@ class ScenarioSignatures:
             scenarios=tuple(meta["scenarios"]), channels=tuple(meta["channels"]),
             channel_index=npz["channel_index"], quantiles=npz["quantiles"],
             specificity=npz["specificity"], counts=npz["counts"], metadata=meta,
+            feature_labels=tuple(meta.get("features", FEATURES)),
         )

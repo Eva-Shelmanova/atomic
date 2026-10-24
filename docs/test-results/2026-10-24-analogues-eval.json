@@ -1,0 +1,260 @@
+{
+ "k": 3,
+ "per_scenario": {
+  "LOCA": {
+   "available": 23,
+   "text": {
+    "returned": 3,
+    "labelled": 1,
+    "relevant": 1,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "LOCAC": {
+   "available": 23,
+   "text": {
+    "returned": 3,
+    "labelled": 1,
+    "relevant": 1,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "SLBIC": {
+   "available": 1,
+   "text": {
+    "returned": 3,
+    "labelled": 2,
+    "relevant": 1,
+    "precision@3_labelled": 0.5
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 2,
+    "relevant": 1,
+    "precision@3_labelled": 0.5
+   }
+  },
+  "SLBOC": {
+   "available": 1,
+   "text": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 0,
+    "precision@3_labelled": 0.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 1,
+    "precision@3_labelled": 0.333
+   }
+  },
+  "SGATR": {
+   "available": 29,
+   "text": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "SGBTR": {
+   "available": 29,
+   "text": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "FLB": {
+   "available": 33,
+   "text": {
+    "returned": 3,
+    "labelled": 2,
+    "relevant": 2,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "LLB": {
+   "available": 23,
+   "text": {
+    "returned": 3,
+    "labelled": 1,
+    "relevant": 1,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "LR": {
+   "available": 124,
+   "text": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 1,
+    "precision@3_labelled": 0.333
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "MD": {
+   "available": 3,
+   "text": {
+    "returned": 3,
+    "labelled": 0,
+    "relevant": 0,
+    "precision@3_labelled": null
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "RW": {
+   "available": 3,
+   "text": {
+    "returned": 3,
+    "labelled": 0,
+    "relevant": 0,
+    "precision@3_labelled": null
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "RI": {
+   "available": 3,
+   "text": {
+    "returned": 3,
+    "labelled": 1,
+    "relevant": 0,
+    "precision@3_labelled": 0.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "ATWS": {
+   "available": 124,
+   "text": {
+    "returned": 3,
+    "labelled": 1,
+    "relevant": 1,
+    "precision@3_labelled": 1.0
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "LACP": {
+   "available": 107,
+   "text": {
+    "returned": 3,
+    "labelled": 2,
+    "relevant": 1,
+    "precision@3_labelled": 0.5
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "LOF": {
+   "available": 124,
+   "text": {
+    "returned": 3,
+    "labelled": 2,
+    "relevant": 1,
+    "precision@3_labelled": 0.5
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  },
+  "TT": {
+   "available": 124,
+   "text": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 2,
+    "precision@3_labelled": 0.667
+   },
+   "combined": {
+    "returned": 3,
+    "labelled": 3,
+    "relevant": 3,
+    "precision@3_labelled": 1.0
+   }
+  }
+ },
+ "summary": {
+  "text": {
+   "returned": 48,
+   "labelled": 28,
+   "relevant": 18,
+   "precision_labelled": 0.643
+  },
+  "combined": {
+   "returned": 48,
+   "labelled": 47,
+   "relevant": 44,
+   "precision_labelled": 0.936
+  }
+ },
+ "version": "analogues-1.1.0+ethz-cc2ace0e610e1fce"
+}

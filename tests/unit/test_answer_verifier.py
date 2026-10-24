@@ -89,7 +89,7 @@ def test_confidence_is_min_over_chain():
 # --- пакет правил ---
 
 def test_default_rulepack_loads():
-    pack = load_rulepack()
+    pack = load_rulepack("aes-core-1.0.0")
     assert pack.pack_id == "aes-core-1.0.0"
     assert {r.rule_id for r in pack.rules} == {"EVIDENCE_REQUIRED", "NO_MODEL_ONLY", "REF_RESOLVABLE"}
     assert set(pack.params["trust_base"]) == set(EvidenceKind)
@@ -162,7 +162,7 @@ def test_release_text():
     assert release_text("сырой ответ", human).endswith("сырой ответ")
     blocked = AnswerVerifier().verify("q", response({}))
     text = release_text("сырой ответ", blocked)
-    assert "сырой ответ" not in text and "aes-core-1.0.0" in text and "EVIDENCE_REQUIRED" in text
+    assert "сырой ответ" not in text and blocked.decision.applied_pack_id in text and "EVIDENCE_REQUIRED" in text
 
 
 def test_bundle_is_json_serializable():

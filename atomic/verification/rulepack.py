@@ -9,7 +9,7 @@ from atomic.contracts.verification import EvidenceKind, Rule, RulePack
 from atomic.diagnostics.config import PROJECT_ROOT
 
 RULEPACK_DIR = PROJECT_ROOT / "config" / "rulepacks"
-DEFAULT_PACK_ID = "aes-core-1.0.0"
+DEFAULT_PACK_ID = "aes-core-1.1.0"
 
 
 def load_rulepack(pack_id: str = DEFAULT_PACK_ID, directory: Path | None = None) -> RulePack:

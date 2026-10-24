@@ -31,7 +31,7 @@ def _get_client():
 
 
 @contextmanager
-def trace_ask(query: str, session_id: Optional[str] = None) -> Generator[Any, None, None]:
+def trace_ask(query: str, session_id: Optional[str] = None, name: str = "atomic.ask") -> Generator[Any, None, None]:
     """Контекст-менеджер для трейса полного запроса ask().
     session_id — для группировки трасс в Langfuse Sessions (до 200 символов).
     """
@@ -44,7 +44,7 @@ def trace_ask(query: str, session_id: Optional[str] = None) -> Generator[Any, No
 
     # propagate_attributes должен оборачивать весь блок, чтобы session_id попал во все дочерние spans
     with client.start_as_current_observation(
-        name="atomic.ask",
+        name=name,
         as_type="span",
         input={"query": query},
     ) as span:
@@ -80,6 +80,20 @@ def observe_llm(
             input=messages,
             output=output,
             metadata=metadata or {},
+        ):
+            pass
+    except Exception:
+        pass
+
+
+def observe_span(name: str, input: Any = None, output: Any = None, metadata: dict | None = None) -> None:
+    """Дочерний span текущей трассы (этапы диагностического конвейера, требование 10)."""
+    client = _get_client()
+    if not client:
+        return
+    try:
+        with client.start_as_current_observation(
+            name=name, as_type="span", input=input, output=output, metadata=metadata or {},
         ):
             pass
     except Exception:
