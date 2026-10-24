@@ -52,5 +52,16 @@ class AnalystAgent(BaseAgent):
             content=content or "Не удалось сформировать ответ.",
             agent_type=self.agent_type,
             handled=True,
-            metadata={},
+            metadata={
+                # Рассуждение модели без внешних источников: опора только MODEL_GENERATED.
+                "verification": {
+                    "claims": [
+                        {
+                            "claim_id": "analyst-1",
+                            "text": (content or "")[:500],
+                            "evidence": [{"ref_id": "analyst:reasoning", "kind": "model"}],
+                        }
+                    ]
+                }
+            },
         )

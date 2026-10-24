@@ -92,7 +92,7 @@ class PgVectorStore:
         with conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT content, metadata, 1 - (embedding <=> %s) as score
+                SELECT id, content, metadata, 1 - (embedding <=> %s) as score
                 FROM {self.table_name}
                 WHERE embedding IS NOT NULL
                 ORDER BY embedding <=> %s
@@ -102,9 +102,19 @@ class PgVectorStore:
             )
             rows = cur.fetchall()
         return [
-            {"content": r[0], "metadata": r[1] or {}, "score": float(r[2])}
+            {"id": f"{self.table_name}:{r[0]}", "content": r[1], "metadata": r[2] or {}, "score": float(r[3])}
             for r in rows
         ]
+
+    def id_exists(self, doc_id: str) -> bool:
+        """doc_id вида '<таблица>:<id>' — для разрешения ссылок верификатором ответа."""
+        prefix = f"{self.table_name}:"
+        if not doc_id.startswith(prefix) or not doc_id[len(prefix):].isdigit():
+            return False
+        conn = self._get_conn()
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT 1 FROM {self.table_name} WHERE id = %s LIMIT 1", (int(doc_id[len(prefix):]),))
+            return cur.fetchone() is not None
 
     def close(self) -> None:
         """Закрывает соединение."""

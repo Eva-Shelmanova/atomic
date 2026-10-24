@@ -61,5 +61,17 @@ class RetrieverAgent(BaseAgent):
             content=content or "Не удалось сформировать ответ.",
             agent_type=self.agent_type,
             handled=True,
-            metadata={"docs": docs},
+            metadata={"docs": docs, "verification": self._verification(content, docs)},
         )
+
+    @staticmethod
+    def _verification(content: str, docs: list[dict]) -> dict:
+        """Утверждение «ответ основан на найденных фрагментах» со ссылками на их id.
+
+        Гранулярность — весь ответ (одно утверждение). Если фрагменты не найдены,
+        опорой служит только текст модели → верификатор потребует оценки человека.
+        """
+        refs = [{"ref_id": d["id"], "kind": "rag_chunk"} for d in docs if d.get("id")]
+        if not refs:
+            refs = [{"ref_id": "retriever:no-docs", "kind": "model"}]
+        return {"claims": [{"claim_id": "retriever-1", "text": (content or "")[:500], "evidence": refs}]}

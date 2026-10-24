@@ -9,6 +9,12 @@ import pytest
 # In-memory память для тестов (без PostgreSQL)
 os.environ.setdefault("ATOMIC_USE_PGVECTOR", "false")
 
+# Тесты не отправляют трассы в Langfuse (ключи могли подтянуться из .env).
+# Включить трассировку в тестах: ATOMIC_TEST_LANGFUSE=1.
+if os.getenv("ATOMIC_TEST_LANGFUSE") != "1":
+    os.environ["LANGFUSE_SECRET_KEY"] = ""
+    os.environ["LANGFUSE_PUBLIC_KEY"] = ""
+
 
 @pytest.fixture
 def workflow():

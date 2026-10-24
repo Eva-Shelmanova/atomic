@@ -14,6 +14,11 @@ class VectorMemory:
 
     def __init__(self):
         self._docs: list[dict[str, Any]] = []
+        self._counter = 0
+
+    def has_id(self, doc_id: str) -> bool:
+        """Есть ли документ с таким id (для разрешения ссылок верификатором ответа)."""
+        return any(d.get("id") == doc_id for d in self._docs)
 
     def has_content(self, content: str) -> bool:
         """Проверка точного совпадения текста (для идемпотентного сида)."""
@@ -21,7 +26,9 @@ class VectorMemory:
 
     def add(self, content: str, metadata: dict | None = None) -> None:
         """Добавляет документ."""
+        self._counter += 1
         self._docs.append({
+            "id": f"mem:{self._counter}",
             "content": content,
             "metadata": metadata or {},
         })

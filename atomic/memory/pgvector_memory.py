@@ -29,6 +29,10 @@ class PgVectorMemory:
         """Проверка точного совпадения текста (для идемпотентного сида)."""
         return self.pg_store.content_exists(content)
 
+    def has_id(self, doc_id: str) -> bool:
+        """Есть ли документ с таким id (для разрешения ссылок верификатором ответа)."""
+        return self.pg_store.id_exists(doc_id)
+
     def add(self, content: str, metadata: Optional[dict] = None) -> None:
         """Добавляет документ: эмбеддинг → сохранение в PG."""
         embedding = self.embedding_client.embed(content)

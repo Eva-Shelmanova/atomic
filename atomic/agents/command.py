@@ -86,9 +86,14 @@ class CommandAgent(BaseAgent):
         review = self._review(code, output, success)
 
         content = f"Сгенерированный код:\n```python\n{code}\n```\n\nРезультат: {output}\n\n{review}"
+        run_id = getattr(self.code_executor, "last_run_id", None)
+        evidence = [{"ref_id": run_id, "kind": "tool_output"}] if run_id else []
+        verification = {
+            "claims": [{"claim_id": "command-1", "text": f"Результат выполнения кода: {output[:300]}", "evidence": evidence}]
+        }
         return AgentResponse(
             content=content,
             agent_type=self.agent_type,
             handled=True,
-            metadata={"code": code, "success": success, "output": output},
+            metadata={"code": code, "success": success, "output": output, "run_id": run_id, "verification": verification},
         )
